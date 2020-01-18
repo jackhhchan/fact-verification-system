@@ -10,7 +10,7 @@ Logs to txt file.
 """
 class Modes(Enum):
     """ Log Mode : File Path """
-    postgres_setup = 'postgres_setup.txt'
+    postgres_insert = 'postgres_insert.txt'
 
     @classmethod
     def has_value(cls_, value) -> bool:
