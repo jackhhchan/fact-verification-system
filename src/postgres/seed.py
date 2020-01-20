@@ -20,6 +20,7 @@ async def insert(parsed):
     check = await check(parsed)
     if check:
         # insert into DB.
+        pass
 
 async def check(parsed:List[str]) -> bool:
     """ [Async] Final type cast check before inserting data to DB. """
@@ -47,12 +48,12 @@ def parse_txt(line:str) -> List[str]:
     Returns:
     List; [page_id, sent_idx, sent]
     """
-    try:
-        line = line.split()
-        pg_id = line[0]
-        sent_idx = line[1]
-        sent = ' '.join(line[2:])
-        return [pg_id, sent_idx, sent]
+    line = line.split()
+    pg_id = line[0]
+    sent_idx = line[1]
+    sent = ' '.join(line[2:])
+    return [pg_id, sent_idx, sent]
+
 
 
 def wiki_data():
@@ -69,4 +70,6 @@ def wiki_data():
 
             
 if __name__ == "__main__":
-    asyncio.run(main())
+    # asyncio.run(main())
+    d = next(wiki_data())
+    print(d)
