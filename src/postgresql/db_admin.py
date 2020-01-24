@@ -18,7 +18,7 @@ class DatabaseAdmin(object):
         try:
             with open(config_path, 'r') as f:
                 config = yaml.load(f, Loader=yaml.FullLoader)
-        except FileNotFoundError as fe:
+        except FileNotFoundError:
             print("[DBA] Config file not found.")
         except Exception as e:
             print("[DBA] {}".format(e))
@@ -50,7 +50,7 @@ class DatabaseAdmin(object):
                                                     self._dbname)
     @property
     def engine(self):
-        if engine is None:
+        if self._engine is None:
             raise AttributeError("[DBA] engine was never created.")
         return self._engine
 
