@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.types import SMALLINT
 
-from . import Base
+from .. import Base
 
 
 class Data(Base):
@@ -14,5 +14,5 @@ class Data(Base):
 
     def __repr__(self):
         return "<Data(page_id={}, sent_id={}, sentence={})".format(
-            self.page_id, self.sent_id, self.sentence
+            self.page_id, self.sent_idx, self.sentence
         )

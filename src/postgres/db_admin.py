@@ -14,7 +14,7 @@ class DatabaseAdmin(object):
     def __init__(self, config_path:str):
         super().__init__()
         # get host and port from config.yaml
-        assert config_path.endswith('.yaml'), "[DB] Configuration must be a yaml file."
+        assert config_path.endswith('.yaml'), "[DBA] Configuration must be a yaml file."
         try:
             with open(config_path, 'r') as f:
                 config = yaml.load(f, Loader=yaml.FullLoader)
@@ -59,8 +59,15 @@ class DatabaseAdmin(object):
         """Creates engine and session maker binding to database engine"""
         if self._engine is None:
             try:
+                print(
+                    "[DBA] Connecting to {}:{}".format(self._host, self._port)
+                )
                 self._engine = create_engine(self.db_string)
                 self._sessionmaker = sessionmaker(bind=self._engine)
+                print("[DBA] Connected to {}:{}/{}.".format(
+                                                        self._host,
+                                                        self._port,
+                                                        self._dbname))
             except Exception as e:
                 print("[DBA] {}".format(e))
             
@@ -75,8 +82,9 @@ class DatabaseAdmin(object):
         session = self._sessionmaker()
         try:
             yield session
-            print("session commiting.")
+            print("[DBA] session commiting.")
             session.commit()    # called after with block completes
+            print("[DBA] session commited.")
         except:
             session.rollback()
             raise Exception("[DBA] Session scope failed. Session is rolled back.")

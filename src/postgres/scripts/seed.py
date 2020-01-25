@@ -9,32 +9,42 @@ from typing import List
 import asyncio
 
 from logger.logger import Logger, Modes
+from postgres.tables.data import Data
+from postgres.db_admin import DatabaseAdmin
 
 async def main():
     """ [Async] Insert to database. """
-    await asyncio.gather(*[insert(parsed) for parsed in wiki_data()])
+    dba = DatabaseAdmin('postgres/config.yaml')
+    dba.connect()
+    with dba.session() as session:
+        await asyncio.gather(*[insert(parsed, session) for parsed in wiki_data()])
 
 #### Database ####
-
-async def insert(parsed):
-    check = await check(parsed)
-    if check:
-        # insert into DB.
-        pass
-
 async def check(parsed:List[str]) -> bool:
     """ [Async] Final type cast check before inserting data to DB. """
     try:
-        pg_id = str(parsed[0])
-        sent_idx = int(parsed[1])
-        sent = str(parsed[2])
+        str(parsed[0])
+        int(parsed[1])
+        str(parsed[2])
         return True
-    except ValueError as ve:
+    except ValueError:
         await Logger.log("Unable to parse sent_idx in {}".format(parsed), mode=Modes.postgres_insert)
         return False
-    except Exception as e:
+    except Exception:
         await Logger.log("General parse error in {}".format(parsed), mode=Modes.postgres_insert)
         return False
+
+async def insert(parsed:List[str], session):
+    checked = await check(parsed)
+    if checked:
+        # insert into DB.
+        data = Data(
+            page_id=str(parsed[0]),
+            sent_idx=int(parsed[1]),
+            sentence=str(parsed[2]),
+            )
+        session.add(data)
+
 
 
 #### Wiki Text Files ####
@@ -70,6 +80,6 @@ def wiki_data():
 
             
 if __name__ == "__main__":
-    # asyncio.run(main())
-    d = next(wiki_data())
-    print(d)
+    asyncio.run(main())
+    # d = next(wiki_data())
+    # print(d)
