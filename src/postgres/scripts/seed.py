@@ -80,6 +80,6 @@ def wiki_data():
 
             
 if __name__ == "__main__":
-    asyncio.run(main())
-    # d = next(wiki_data())
-    # print(d)
+    # asyncio.run(main())
+    # # d = next(wiki_data())
+    # # print(d)
