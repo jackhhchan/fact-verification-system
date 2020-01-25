@@ -9,7 +9,7 @@ class Data(Base):
     
     id = Column(Integer, primary_key=True)
     page_id = Column(String)
-    sent_id = Column(SMALLINT)
+    sent_idx = Column(SMALLINT)
     sentence = Column(String)
 
     def __repr__(self):
