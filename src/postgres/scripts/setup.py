@@ -2,16 +2,18 @@
 Set up table structure for database
 """
 from postgres.db_admin import DatabaseAdmin
-from .. import Base
-from postgres.tables import *
+from postgres.db_schema import DatabaseSchema
 
 def setup():
     """ Sets up database with the appropriate schemas
     """
-    # set up sqlalchemy config
+    # connect to db
     dba = DatabaseAdmin('postgres/config.yaml')
     dba.connect()
-    Base.metadata.create_all(dba.engine)
+
+    # set up schemas
+    dbs = DatabaseSchema()
+    dbs.create_schemas(dba.engine)
 
 if __name__ == "__main__":
     setup()

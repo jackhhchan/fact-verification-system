@@ -1,8 +1,17 @@
+from . import Base
+from postgres.tables import *
+
+from sqlalchemy.engine import Engine
+
 class DatabaseSchema(object):
     def __init__(self):
         super().__init__()
 
     @staticmethod
-    def create_schemas(engine, meta):
+    def create_schemas(engine: Engine) -> None:
         # create schemas using engine's meta data.
-        pass
+        try:
+            Base.metadata.create_all(engine)
+            print("[DBS] Schemas created.")
+        except Exception as e:
+            print("[DBS] Error: {}".format(e))
