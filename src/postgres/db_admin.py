@@ -69,7 +69,7 @@ class DatabaseAdmin(object):
                                                         self._port,
                                                         self._dbname))
             except Exception as e:
-                print("[DBA] {}".format(e))
+                raise ImportError("[DBA] {}".format(e))
             
 
     @contextmanager
@@ -97,5 +97,5 @@ if __name__ == "__main__":
     dba = DatabaseAdmin('postgres/config.yaml')
     dba.connect()
     with dba.session() as s:
-        print("with block...")
+        print("running with block...")
     print("done.")

@@ -1,8 +1,13 @@
 """ 
 DATABASE SEED SCRIPT
 
-parses wiki-text files and
-insert into postgres docker container.
+Prereqs:
+    postgres/config.yaml -- file with postgres config
+    postgres/scripts/setup.py is run to set up database.
+
+What it does:
+    parses wiki-text files from '../dataset/wiki-pages-text' and
+    insert into postgres docker container (connected via postgres/config.yaml)
 """
 import os
 from typing import List
@@ -72,6 +77,7 @@ def wiki_data():
     Reads data from wiki-text files and generate formatted list.
     """
     path = '../dataset/wiki-pages-text'
+    print("Parsing text files in {}".format(path))
     wiki_fnames = [f for f in os.listdir(path) if f.endswith('.txt')]
     for wiki in wiki_fnames:
         with open("{}/{}".format(path, wiki), 'r') as f:

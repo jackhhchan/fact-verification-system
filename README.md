@@ -1,6 +1,13 @@
 # watson-junior-2
 
-## src
+
+### To run:
+To run any module or scripts:
+```
+cd src/
+python -m folder.module
+```
+
 ## src/postgres
 #### database storing raw dataset files
 #### 

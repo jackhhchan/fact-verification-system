@@ -14,4 +14,4 @@ class DatabaseSchema(object):
             Base.metadata.create_all(engine)
             print("[DBS] Schemas created.")
         except Exception as e:
-            print("[DBS] Error: {}".format(e))
+            raise Exception("[DBS] Error: {}".format(e))
