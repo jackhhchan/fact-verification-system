@@ -82,8 +82,9 @@ class DatabaseAdmin(object):
         session = self._sessionmaker()
         try:
             yield session
-            print("[DBA] session commiting.")
-            session.commit()    # called after with block completes
+            # after with block completes:
+            print("[DBA] session commiting...")
+            session.commit()    
             print("[DBA] session commited.")
         except:
             session.rollback()
