@@ -14,7 +14,14 @@ from postgres.db_query import DatabaseQuery as dbq
 from fact_verification_system.classifier.pipeline.bert.preprocess import get_embeddings
 
 def main():
-    with open('../dataset/devset.json', 'r') as f:
+    json_fname = 'devset.json'
+
+    tfrecord_fname_prefix = json_fname.rstrip('.json')
+    tfrecord_i = 0
+    examples_in_record = 5000
+    tfrecord_writer = tf.io.TFRecordWriter("{}_{}.tfrecords".format(tfrecord_fname_prefix, tfrecord_i))
+    
+    with open('../dataset/{}'.format(json_fname), 'r') as f:
         train_json = json.load(f)
         dba = DatabaseAdmin('postgres/config.yaml')
         dba.connect()
@@ -32,10 +39,16 @@ def main():
                         bert_sents = (_preprocess_string(claim), _preprocess_string(sent))
                         example = _get_embeddings_example(bert_sents, label)
                         print(example)
+                        tfrecord_writer.write(example.SerializeToString())
                     except Exception as e:
                         print("[CREATE_DS] {}".format(e))
-                if i % 1000 == 0:
+                
+                if i % examples_in_record == 0:
                     print("Just ran through {} examples.".format(i))
+                    tfrecord_writer.close()
+                    tfrecord_i += 1
+                    tfrecord_writer = tf.io.TFRecordWriter("{}_{}.tfrecords".format(tfrecord_fname_prefix, tfrecord_i))
+    tfrecord_writer.close()
 
 
 def _preprocess_string(string:str) -> str:
