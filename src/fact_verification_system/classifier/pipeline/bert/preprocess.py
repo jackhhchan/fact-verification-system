@@ -3,17 +3,21 @@ Contains BERT preprocess specific functions
 """
 import tensorflow_hub as hub
 from typing import Tuple, Dict
+import numpy as np
 
-import tokenization         # from official google-research/bert github @6/2/2020
+# from official google-research/bert github @6/2/2020
+from fact_verification_system.classifier.pipeline.bert import tokenization
+     
 
 tokenizer = None
 BERT_MAX_SEQ_LENGTH = 512       # largest sequence BERT can process
+INPUT_TYPE = np.int32
 
 def get_embeddings(
     sents:Tuple[str],
     max_seq_length:int,
     bert_url="https://tfhub.dev/tensorflow/bert_en_uncased_L-12_H-768_A-12/1"
-    ) -> Dict[list]:
+    ) -> Dict[str, list]:
     """ Returns a dictionary of embeddings as per (paper & tf_hub)
             - input_word_ids
             - input_mask
@@ -39,9 +43,9 @@ def get_embeddings(
                 .format(BERT_MAX_SEQ_LENGTH))
 
     return {
-        'input_word_ids': _get_ids(tokens, tokenizer, max_seq_length),
-        'input_mask': _get_masks(tokens, max_seq_length),
-        'segment_ids': _get_segments(tokens, max_seq_length)
+        'input_word_ids': np.array(_get_ids(tokens, tokenizer, max_seq_length), dtype=np.int32),
+        'input_mask': np.array(_get_masks(tokens, max_seq_length), dtype=np.int32),
+        'segment_ids': np.array(_get_segments(tokens, max_seq_length), dtype=np.int32)
     }
 
 
@@ -82,6 +86,7 @@ def _create_tokenizer(bert_url):
     bert_layer = hub.KerasLayer(bert_url, trainable=False)
     vocab_file = bert_layer.resolved_object.vocab_file.asset_path.numpy()
     do_lower_case = bert_layer.resolved_object.do_lower_case.numpy()
+    global tokenizer
     tokenizer = tokenization.FullTokenizer(vocab_file, do_lower_case)
 
 
@@ -105,9 +110,6 @@ def _get_ids(tokens, tokenizer, max_seq_length):
 
 def _get_masks(tokens, max_seq_length):
     """Mask for padding"""
-    if not tokenizer:
-        raise RuntimeError("No tokenizer. Call _create_tokenizer().")
-
     if len(tokens)>max_seq_length:
         raise IndexError("Token length more than max seq length!")
     padding = [0] * (max_seq_length-len(tokens))
@@ -116,9 +118,6 @@ def _get_masks(tokens, max_seq_length):
 
 def _get_segments(tokens, max_seq_length):
     """Segments: 0 for the first sequence, 1 for the second"""
-    if not tokenizer:
-        raise RuntimeError("No tokenizer. Call _create_tokenizer().")
-
     if len(tokens)>max_seq_length:
         raise IndexError("Token length more than max seq length!")
     segments = []
@@ -130,3 +129,10 @@ def _get_segments(tokens, max_seq_length):
     
     padding = [0] * (max_seq_length - len(tokens))
     return segments + padding
+
+
+if __name__ == "__main__":
+    string = '-LRB-hello-RRB'
+    _create_tokenizer("https://tfhub.dev/tensorflow/bert_en_uncased_L-12_H-768_A-12/1")
+    stokens = _tokenize(string, tokenizer)
+    print(stokens)
