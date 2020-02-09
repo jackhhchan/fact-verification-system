@@ -33,10 +33,12 @@ async def check(parsed:List[str]) -> bool:
         str(parsed[2])
         return True
     except ValueError:
-        await Logger.log("Unable to parse sent_idx in {}".format(parsed), mode=Modes.postgres_insert)
+        await Logger.log_async("Unable to parse sent_idx in {}".format(parsed), 
+                            mode=Modes.postgres_insert)
         return False
     except Exception:
-        await Logger.log("General parse error in {}".format(parsed), mode=Modes.postgres_insert)
+        await Logger.log_async("General parse error in {}".format(parsed), 
+                    mode=Modes.postgres_insert)
         return False
 
 async def insert(parsed:List[str], session):
@@ -77,7 +79,7 @@ def wiki_data():
     Reads data from wiki-text files and generate formatted list.
     """
     path = '../dataset/wiki-pages-text'
-    print("Parsing text files in {}".format(path))
+    print("Parsing text files in {}...".format(path))
     wiki_fnames = [f for f in os.listdir(path) if f.endswith('.txt')]
     for wiki in wiki_fnames:
         with open("{}/{}".format(path, wiki), 'r') as f:
