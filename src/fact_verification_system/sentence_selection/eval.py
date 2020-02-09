@@ -26,7 +26,7 @@ def eval(args):
             # get RETRIEVED (page_id, sent_idx) tuples from returned search results
             limit = 10
             res = wsq.query(es, claim)
-            rel_pageid_sentidx = res.get_sentences(limit=limit)
+            rel_pageid_sentidx = res.get_page_id_sent_idx(limit=limit)
             sentences = res.get_sentences(limit=limit)
             
             # sentence selection
@@ -35,7 +35,7 @@ def eval(args):
             
 
             # modified retrieved data
-            filtered_rel = set(filter(lambda rel: rel[0] in indices, rel_pageid_sentidx))
+            filtered_rel = set(filter(lambda x: x[0] in indices, enumerate(rel_pageid_sentidx)))    #x[0] is an index, x[1] is (page_id, sent_idx)
 
             # get TRUE (page_id, sent_idx) tuples from devset.json
             true_pageid_sentidx = set([(ev[0], ev[1]) for ev in data.get('evidence')])

@@ -25,11 +25,11 @@ class SentenceSelection(object):
             - at least one NER tag matches
         """
         filtered = list(filter(
-                    lambda sent: self._match_conditions(input_claim, sent[1]),
+                    lambda x: self._match_conditions(input_claim, x[1]),        #x[0] is an index
                     enumerate(sentences)))
 
-        num_filtered = len(sentences) - len(filtered)
-        print("[SS] Filtered {} sentences.".format(num_filtered))
+        # num_filtered = len(sentences) - len(filtered)
+        # print("[SS] Filtered {} sentences.".format(num_filtered))
         return filtered
 
     def _match_conditions(self, claim, sent) -> bool:

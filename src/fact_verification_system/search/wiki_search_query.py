@@ -31,7 +31,7 @@ class WikiSearchQuery(object):
         try:
             res = es.search(
                 index=cls.index,
-                body=cls._format_full_text_match(input_claim)
+                body=cls._format_full_text_multi_match(input_claim)
             )
         except NotFoundError as e:
             print("[WSQ] Index {} does not exist.".format(cls.index))
