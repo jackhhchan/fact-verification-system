@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Set
+from typing import Set, List
 from elasticsearch.exceptions import NotFoundError
 from elasticsearch_dsl import Search
 
@@ -123,6 +123,11 @@ class Results(object):
     def get_page_id_sent_idx(self, limit:int=None)-> Set[tuple]:
         hits = self.get_hits(limit)
         return set([(hit['_source']['page_id'], hit['_source']['sent_idx']) for hit in hits])
+
+    def get_sentences(self, limit:int=None)->List[str]:
+        hits = self.get_hits(limit)
+        return list([hit['_source']['sentence'] for hit in hits])
+        
 
 
 

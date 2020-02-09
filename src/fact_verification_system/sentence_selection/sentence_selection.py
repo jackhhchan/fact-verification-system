@@ -18,17 +18,20 @@ class SentenceSelection(object):
     def spacy_all_tags(self):
         return ('PERSON')       #TODO: there are more to be added
 
-    def filtered_sentences(self, input_claim, sentences:List[str]) -> List[str]:
-        """ Returns list of filtered sentences
+    def filtered_sentences(self, input_claim, sentences:List[str]) -> List[tuple]:
+        """ Returns list of filtered sentences with index
 
         filtering conditions:
             - at least one NER tag matches
         """
-        return filter(
-                    lambda sent: self._match_conditions(input_claim, sent),
-                    sentences)
+        filtered = list(filter(
+                    lambda sent: self._match_conditions(input_claim, sent[1]),
+                    enumerate(sentences)))
 
-    # NOTE: match conditions is extensible by adding more function that returns boolean.
+        num_filtered = len(sentences) - len(filtered)
+        print("[SS] Filtered {} sentences.".format(num_filtered))
+        return filtered
+
     def _match_conditions(self, claim, sent) -> bool:
         doc_claim = self.nlp(claim)
         doc_sent = self.nlp(sent)
@@ -41,15 +44,9 @@ class SentenceSelection(object):
         for cond in conditions:
             if not isinstance(cond, Condition):
                 raise AttributeError("[SS] conditions in list must be an instances of class Condition.")
-            if cond.meet_condition() is False:
+            if cond.meet_condition(self._get_NER_tags) is False:
                 return False
         return True
-        
-
-    def _one_tag_match(self, doc_1, doc_2) -> bool:
-        doc_1_tags = self._get_NER_tags(doc_1)
-        doc_2_tags = self._get_NER_tags(doc_2)
-        return len(doc_1_tags.intersection(doc_2_tags)) > 0
 
 
     def _get_NER_tags(self, doc:spacy.tokens.doc.Doc) -> set:
@@ -85,4 +82,5 @@ class OneTagMatch(Condition):
             raise ValueError('[SS] _get_NER_tags must be a function.')
         doc_1_tags = _get_NER_tags(self.doc_1)
         doc_2_tags = _get_NER_tags(self.doc_2)
+
         return len(doc_1_tags.intersection(doc_2_tags)) > 0

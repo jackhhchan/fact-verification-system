@@ -1,5 +1,4 @@
-"""
-Run this script to evaluate the current search strategy.
+""" Evaluate current search strategy using train.json
 """
 
 import json
@@ -38,7 +37,7 @@ def eval(args):
             if args.debug:
                 print("retrieved:\n {}".format(rel_pageid_sentidx))
                 print("true:\n {}".format(true_pageid_sentidx))
-                if i >= 3:
+                if i >= args.debug:
                     print("Eval ended. (DEBUG MODE)")
                     return
 
@@ -50,6 +49,8 @@ def eval(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-d", "--debug", help="debug mode, loop ends at 3rd iteration.")
+    parser.add_argument("-d", "--debug", 
+                    help="debug mode, loop ends at 3rd iteration.",
+                    type=int)
     args = parser.parse_args()
     eval(args)
