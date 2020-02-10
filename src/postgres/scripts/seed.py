@@ -14,7 +14,7 @@ from typing import List
 import asyncio
 
 from logger.logger import Logger, Modes
-from postgres.tables.data import Wiki
+from postgres.tables.wiki import Wiki
 from postgres.db_admin import DatabaseAdmin
 
 async def main():
