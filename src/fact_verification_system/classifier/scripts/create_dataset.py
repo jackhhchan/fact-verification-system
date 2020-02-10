@@ -18,7 +18,7 @@ def main():
 
     tfrecord_fname_prefix = json_fname.rstrip('.json')
     tfrecord_i = 0
-    examples_in_record = 5000
+    examples_in_record = 25000
     tfrecord_writer = tf.io.TFRecordWriter("{}_{}.tfrecords".format(tfrecord_fname_prefix, tfrecord_i))
     
     with open('../dataset/{}'.format(json_fname), 'r') as f:
