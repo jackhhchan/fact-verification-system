@@ -4,8 +4,8 @@ from sqlalchemy.types import SMALLINT
 from .. import Base
 
 
-class Data(Base):
-    __tablename__ = 'data'
+class Wiki(Base):
+    __tablename__ = 'Wiki'
     
     id = Column(Integer, primary_key=True)
     page_id = Column(String)

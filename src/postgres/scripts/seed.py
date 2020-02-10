@@ -14,7 +14,7 @@ from typing import List
 import asyncio
 
 from logger.logger import Logger, Modes
-from postgres.tables.data import Data
+from postgres.tables.data import Wiki
 from postgres.db_admin import DatabaseAdmin
 
 async def main():
@@ -45,12 +45,12 @@ async def insert(parsed:List[str], session):
     checked = await check(parsed)
     if checked:
         # insert into DB.
-        data = Data(
+        wiki_data = Wiki(
             page_id=str(parsed[0]),
             sent_idx=int(parsed[1]),
             sentence=str(parsed[2]),
             )
-        session.add(data)
+        session.add(wiki_data)
 
 
 
@@ -81,13 +81,17 @@ def wiki_data():
     path = '../dataset/wiki-pages-text'
     print("Parsing text files in {}...".format(path))
     wiki_fnames = [f for f in os.listdir(path) if f.endswith('.txt')]
-    for wiki in wiki_fnames:
-        with open("{}/{}".format(path, wiki), 'r') as f:
-            for line in f:
+    for wiki_fname in wiki_fnames:
+        print("[POSTGRES-SEED] Inserting {} to postgres db...".format(wiki_fname))
+        with open("{}/{}".format(path, wiki_fname), 'r') as f:
+            for i, line in enumerate(f):
+                i = i + 1
+                if i % 10000 == 0:
+                    print("[POSTGRES-SEED] {} lines parsed for {}.".format(i, wiki_fname))
                 yield parse_txt(line)
 
             
 if __name__ == "__main__":
-    # asyncio.run(main())
-    # # d = next(wiki_data())
-    # # print(d)
+    asyncio.run(main())
+    # d = next(wiki_data())
+    # print(d)

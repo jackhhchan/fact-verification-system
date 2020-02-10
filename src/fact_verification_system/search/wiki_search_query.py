@@ -127,8 +127,6 @@ class Results(object):
     def get_sentences(self, limit:int=None)->List[str]:
         hits = self.get_hits(limit)
         return list([hit['_source']['sentence'] for hit in hits])
-        
-
 
 
     def __str__(self):
