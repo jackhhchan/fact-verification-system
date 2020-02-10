@@ -1,5 +1,5 @@
 from . import Base
-from postgres.tables import *
+from postgres.tables.wiki import *
 
 from sqlalchemy.engine import Engine
 
