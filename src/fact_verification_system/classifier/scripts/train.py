@@ -18,12 +18,9 @@ class BertParams(Enum):
 
 
 
-def main():
-    # load training file.
-    train_json = json.load('train.json')    
-
-    # generate datasets
-    ds = None       # generator
+def main():    
+    # TODO: tf.dataset read in parallel from TFRecords.
+    ds = None
 
     print("Dataset preview:")
     print(next(iter(ds)))

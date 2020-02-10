@@ -5,7 +5,7 @@ from .. import Base
 
 
 class Wiki(Base):
-    __tablename__ = 'Wiki'
+    __tablename__ = 'wiki'
     
     id = Column(Integer, primary_key=True)
     page_id = Column(String)
@@ -13,6 +13,6 @@ class Wiki(Base):
     sentence = Column(String)
 
     def __repr__(self):
-        return "<Data(page_id={}, sent_id={}, sentence={})".format(
+        return "<Wiki(page_id={}, sent_id={}, sentence={})".format(
             self.page_id, self.sent_idx, self.sentence
         )
