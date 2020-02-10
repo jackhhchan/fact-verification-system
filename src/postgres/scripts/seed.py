@@ -12,6 +12,7 @@ What it does:
 import os
 from typing import List
 import asyncio
+from time import time
 
 from logger.logger import Logger, Modes
 from postgres.tables.wiki import Wiki
@@ -21,8 +22,10 @@ async def main():
     """ [Async] Insert to database. """
     dba = DatabaseAdmin('postgres/config.yaml')
     dba.connect()
+    s = time()
     with dba.session() as session:
         await asyncio.gather(*[insert(parsed, session) for parsed in wiki_data()])
+    print("Elapsed time: {}s".format(time()-s))
 
 #### Database ####
 async def check(parsed:List[str]) -> bool:
