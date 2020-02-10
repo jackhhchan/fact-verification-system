@@ -10,22 +10,35 @@ from fact_verification_system.search.wiki_search_admin import WikiSearchAdmin
 def seed():
     index_name = 'wiki'
     
-    wsa = WikiSearchAdmin(host="0.0.0.0", port=9200)
+    config = 'fact_verification_system/search/config.yaml'
+    es = WikiSearchAdmin(config).es
+
     # ES 7.0 has removed mapping types, API calls are now Typeless
-    print("Creating index: {} anew...".format(index_name))
-    wsa.es.indices.delete(index=index_name)
-    wsa.es.indices.create(index=index_name)
+    print("Creating new index: {}...".format(index_name))
+    if es.indices.exists(index=index_name):
+        es.indices.delete(index=index_name)
+    es.indices.create(index=index_name)
     
     print("Seeding newly created index: {}...".format(index_name))
     cpu_count = multiprocessing.cpu_count()
     
-    deque(parallel_bulk(
-    client=wsa.es,
+    # deque(parallel_bulk(
+    # client=wsa.es,
+    # actions=_iter_wiki_data_for_es(index_name),
+    # thread_count=cpu_count
+    # ), maxlen=0)
+
+    pb = parallel_bulk(
+    client=es,
     actions=_iter_wiki_data_for_es(index_name),
     thread_count=cpu_count
-    ), maxlen=0)
+    )
 
-    wsa.es.indices.refresh()
+    for success, info in pb:
+        if not success:
+            print("A document failed: {}".format(info))
+
+    es.indices.refresh()
 
     print("Bulk insert complete.")
 
@@ -36,10 +49,10 @@ def _iter_wiki_data_for_es(index_name):
     for parsed in _iter_wiki_data():
         if _check(parsed):
             yield {
+            "_index":index_name,
             'page_id': parsed[0],
             'sent_idx': parsed[1],
             'sentence': parsed[2],
-            "_index":index_name
         }
 
 def _check(parsed:List[str]) -> bool:

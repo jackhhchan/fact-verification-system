@@ -10,7 +10,8 @@ from fact_verification_system.search.wiki_search_admin import WikiSearchAdmin
 def setup():
     print("Setting up elasticsearch database...")
     index_name = 'wiki'
-    wsa = WikiSearchAdmin(host="0.0.0.0", port=9200)
+    config = 'fact_verification_system/search/config.yaml'
+    wsa = WikiSearchAdmin(config)
     try:
         print("Creating index: {}".format(index_name))
         wsa.es.indices.create(index=index_name)
