@@ -1,7 +1,6 @@
 from enum import Enum
 from typing import Set, List
 from elasticsearch.exceptions import NotFoundError
-from elasticsearch_dsl import Search
 
 class Field(Enum):
     page_id = 'page_id'

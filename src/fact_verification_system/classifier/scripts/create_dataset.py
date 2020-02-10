@@ -14,12 +14,13 @@ from postgres.db_query import DatabaseQuery as dbq
 from fact_verification_system.classifier.pipeline.bert.preprocess import get_embeddings
 
 def main():
-    json_fname = 'devset.json'
+    json_fname = 'train.json'
 
-    tfrecord_fname_prefix = json_fname.rstrip('.json')
+    assert json_fname.endswith('.json'), "training json must end with .json."
+    tfrecord_fname_prefix = json_fname[:-5]
     tfrecord_i = 0
     examples_in_record = 25000
-    tfrecord_writer = tf.io.TFRecordWriter("{}_{}.tfrecords".format(tfrecord_fname_prefix, tfrecord_i))
+    tfrecord_writer = tf.io.TFRecordWriter("../dataset/tfrecords/{}_{}.tfrecords".format(tfrecord_fname_prefix, tfrecord_i))
     
     with open('../dataset/{}'.format(json_fname), 'r') as f:
         train_json = json.load(f)
@@ -33,17 +34,20 @@ def main():
                     page_id = ev[0]
                     sent_idx = ev[1]
                     try:
+                        print("try")
                         sent = dbq.query_sentence(sess, page_id, sent_idx)
-                        if sent is not None:
-                            print(sent)
+                        print(sent)
                         bert_sents = (_preprocess_string(claim), _preprocess_string(sent))
+                        print(bert_sents)
                         example = _get_embeddings_example(bert_sents, label)
                         print(example)
                         tfrecord_writer.write(example.SerializeToString())
                     except Exception as e:
                         print("[CREATE_DS] {}".format(e))
-                
-                if i % examples_in_record == 0:
+                        raise e
+                tfrecord_writer.close()
+                break
+                if i+1 % examples_in_record == 0:
                     print("Just ran through {} examples.".format(i))
                     tfrecord_writer.close()
                     tfrecord_i += 1
