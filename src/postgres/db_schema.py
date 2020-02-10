@@ -12,6 +12,7 @@ class DatabaseSchema(object):
         # create schemas using engine's meta data.
         try:
             Base.metadata.create_all(engine)
+            print("[DBS] Info:\n[DBS]{}".format(Base.metadata.tables))
             print("[DBS] Schemas created.")
         except Exception as e:
             raise Exception("[DBS] Error: {}".format(e))
