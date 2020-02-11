@@ -15,9 +15,9 @@ def seed():
 
     # ES 7.0 has removed mapping types, API calls are now Typeless
     print("Creating new index: {}...".format(index_name))
-    if es.indices.exists(index=index_name):
-        es.indices.delete(index=index_name)
-    es.indices.create(index=index_name)
+    # if es.indices.exists(index=index_name):
+    #     es.indices.delete(index=index_name)
+    # es.indices.create(index=index_name)
     
     print("Seeding newly created index: {}...".format(index_name))
     cpu_count = multiprocessing.cpu_count()

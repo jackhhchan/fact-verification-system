@@ -5,7 +5,6 @@ import json
 import pprint
 pp = pprint.PrettyPrinter(indent=2)
 
-from elasticsearch_dsl import Search
 
 
 def main():
@@ -16,7 +15,8 @@ def main():
 
 
     res = wsq.query(wsa.es, mock_input_claim)
-    pp.pprint(res.results)
+    # pp.pprint(res.results)
+    pp.pprint(res.get_hits(limit=10))
 
     
 

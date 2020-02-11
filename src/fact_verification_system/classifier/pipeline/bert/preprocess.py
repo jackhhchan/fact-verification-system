@@ -98,7 +98,7 @@ def _tokenize(sent:str, tokenizer):
 
 
 def _get_ids(tokens, tokenizer, max_seq_length):
-    """Token ids from Tokenizer vocab"""
+    """Token ids from Tokenizer vocab, (added padding)"""
     if not tokenizer:
         raise RuntimeError("No tokenizer. Call _create_tokenizer().")
 
@@ -109,7 +109,7 @@ def _get_ids(tokens, tokenizer, max_seq_length):
     return input_ids
 
 def _get_masks(tokens, max_seq_length):
-    """Mask for padding"""
+    """Mask for padding, (added padding)"""
     if len(tokens)>max_seq_length:
         raise IndexError("Token length more than max seq length!")
     padding = [0] * (max_seq_length-len(tokens))
@@ -117,7 +117,7 @@ def _get_masks(tokens, max_seq_length):
 
 
 def _get_segments(tokens, max_seq_length):
-    """Segments: 0 for the first sequence, 1 for the second"""
+    """Segments: 0 for the first sequence, 1 for the second, (added padding)"""
     if len(tokens)>max_seq_length:
         raise IndexError("Token length more than max seq length!")
     segments = []
