@@ -2,7 +2,7 @@
 Contains BERT preprocess specific functions
 """
 import tensorflow_hub as hub
-from typing import Tuple, Dict
+from typing import Tuple, Dict, List
 import numpy as np
 
 # from official google-research/bert github @6/2/2020
@@ -15,7 +15,7 @@ INPUT_TYPE = np.int32
 
 def get_embeddings(
     sents:Tuple[str],
-    max_seq_length:int,
+    max_seq_length:int,     # combined seq length for sentence pairs
     bert_url="https://tfhub.dev/tensorflow/bert_en_uncased_L-12_H-768_A-12/1"
     ) -> Dict[str, list]:
     """ Returns a dictionary of embeddings as per (paper & tf_hub)
@@ -32,24 +32,32 @@ def get_embeddings(
 
     tokens = list()
     if num_sents == 1:
-        tokens = preprocess_single(sents[0])
+        tokens = preprocess_single(sents[0], max_seq_length)
     elif num_sents == 2:
-        tokens = preprocess_pair(sents[0], sents[1])
+        tokens = preprocess_pair(sents[0], sents[1], max_seq_length)
 
     if len(tokens) > BERT_MAX_SEQ_LENGTH:
-        raise RuntimeError(
+        raise AttributeError(
             "Largest sequence BERT can handle is {} \
                 (incld. added tokens (see implementation details of this module.))"\
                 .format(BERT_MAX_SEQ_LENGTH))
 
+    input_word_ids = np.array(_get_ids(tokens, tokenizer, max_seq_length), dtype=np.int32)
+    input_mask = np.array(_get_masks(tokens, max_seq_length), dtype=np.int32)
+    segment_ids = np.array(_get_segments(tokens, max_seq_length), dtype=np.int32)
+
+    assert len(input_word_ids) == max_seq_length, "input_word_ids must be equal max_seq_length."
+    assert len(input_mask) == max_seq_length, "input_mask must be equal max_seq_length."
+    assert len(segment_ids) == max_seq_length, "segment_ids must be equal max_seq_length."
+
     return {
-        'input_word_ids': np.array(_get_ids(tokens, tokenizer, max_seq_length), dtype=np.int32),
-        'input_mask': np.array(_get_masks(tokens, max_seq_length), dtype=np.int32),
-        'segment_ids': np.array(_get_segments(tokens, max_seq_length), dtype=np.int32)
+        'input_word_ids': input_word_ids,
+        'input_mask': input_mask,
+        'segment_ids': segment_ids
     }
 
 
-def preprocess_pair(sent_1:str, sent_2:str):
+def preprocess_pair(sent_1:str, sent_2:str, max_seq_length):
     """ Tokenizes sentence pair
     
     Adds ['CLS'] to the beginning.
@@ -61,10 +69,13 @@ def preprocess_pair(sent_1:str, sent_2:str):
     # tokenizes sentence pair
     stokens_1 = _tokenize(sent_1, tokenizer)
     stokens_2 = _tokenize(sent_2, tokenizer)
+    num_bert_identifiers = 3
+    stokens_1, stokens_2 = _truncate_seq_pair(stokens_1, stokens_2, 
+                                        max_seq_length-num_bert_identifiers)
     return ["[CLS]"] + stokens_1 + ["[SEP]"] + stokens_2 + ["[SEP]"]
 
 
-def preprocess_single(sent:str):
+def preprocess_single(sent:str, max_seq_length):
     """ Tokenizes sentence pair
     
     Adds ['CLS'] to start of sentence.
@@ -75,10 +86,39 @@ def preprocess_single(sent:str):
     """
     # tokenizes sentence pair
     stokens = _tokenize(sent, tokenizer)
+    num_bert_identifiers = 2
+    stokens = _truncate_seq_single(stokens, max_seq_length - num_bert_identifiers)
     return ["[CLS]"] + stokens + ["[SEP]"]
 
 
 ### Helpers ###
+
+# from google-research/bert
+def _truncate_seq_pair(tokens_a, tokens_b, max_length):
+  """Truncates a sequence pair in place to the maximum length."""
+
+  # This is a simple heuristic which will always truncate the longer sequence
+  # one token at a time. This makes more sense than truncating an equal percent
+  # of tokens from each, since if one sequence is very short then each token
+  # that's truncated likely contains more information than a longer sequence.
+  while True:
+    total_length = len(tokens_a) + len(tokens_b)
+    if total_length <= max_length:
+      return tokens_a, tokens_b
+    if len(tokens_a) > len(tokens_b):
+      tokens_a.pop()
+    else:
+      tokens_b.pop()
+
+def _truncate_seq_single(tokens, max_length):
+    while True:
+        if len(tokens) <= max_length:
+            return tokens
+        else:
+            tokens.pop()
+
+
+
 
 def _create_tokenizer(bert_url):
     """Creates Tensorflow's BERT tokenizer GLOBAL STATE."""
