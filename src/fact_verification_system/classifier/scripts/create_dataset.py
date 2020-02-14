@@ -59,16 +59,23 @@ async def write_to_tfrecord(writer, sess, d, i):
             # evidence 
             sent = await dbq.async_query_sentence(sess, page_id, sent_idx)            
             ### processed bert input embeddings -> tfrecords
-            bert_sents = (_preprocess_string(claim), _preprocess_string(sent))
-            example = await _get_embeddings_example(bert_sents, label, max_seq_length)
+            # bert_sents = (_preprocess_string(claim), _preprocess_string(sent))
+            # example = await _get_embeddings_example(bert_sents, label, max_seq_length)
+            if sent == None:
+                continue
 
+            bert_sents = (claim, sent)
+            example = await _get_strings_example(bert_sents, label)
             writer.write(example.SerializeToString())
-
-        except AttributeError as e:
+        except AttributeError:
+            print("[CREATE_DS] {}:{} returned None. Skipped.".format(page_id, sent_idx))
+        except ValueError:
             print("[CREATE_DS] {}:{} returned None. Skipped.".format(page_id, sent_idx))
         except Exception as e:
             print("[CREATE_DS] {}".format(e))
             raise e
+        
+        
 
 #### Preprocessing ####
 
@@ -93,7 +100,9 @@ def _get_target_num(label:str):
 #### Tensorflow tf.train.Example ####
 
 async def _get_strings_example(bert_sents: Tuple[str], label:str) -> tf.train.Example:
-    target = tf.one_hot(_get_target_num(label), depth=2, dtype=tf.int32)
+    target = np.array([_get_target_num(label)], dtype=np.int32)
+    print(_bytes_feature(bert_sents[0]))
+    exit()
     feature = {
         'claim': _bytes_feature(bert_sents[0]),
         'evidence': _bytes_feature(bert_sents[1]),
@@ -146,19 +155,27 @@ def _bytes_feature(value) -> tf.train.Feature:
 # 0    29775
 # Name: label, dtype: int64
 
-def balanced(train_json):
-    # keep 29775 observations with label == 1 (i.e. SUPPORTS) to match REFUTES
-    num_supports_seen = 0
-    num_removed = 0
-    for i, d in enumerate(train_json):
-        target = _get_target_num(d.get('label'))
-        if target == 1:
-            num_supports_seen += 1
-        elif target == 2:   # removes label = NOT ENOUGH EVIDENCE
-            train_json.pop(i)
-            num_removed += 1
-        if num_supports_seen >= 29775:
-            return train_json[:i-num_removed]
+def clean_data(train_json:dict) -> dict:
+    # Data Cleaning
+    df = pd.DataFrame(train_json)
+    df = df[df.label != "NOT ENOUGH LABEL"]
+    df = df.sort_values(by='label', ascending=True)
+    print("Dataset preview:\n{}\n".format(df.head()))
+    print("Dataset info:\n{}\n".format(df['label'].value_counts()))
+
+    print("Preprocessing dataset...")
+    df_SUPPORTS = df[df.label == "SUPPORTS"]
+    df_REFUTES = df[df.label == "REFUTES"]
+
+    # num_supports = len(df_REFUTES)        ## balanced
+    num_supports = int(len(df_SUPPORTS)*0.6)
+    df_SUPPORTS = df_SUPPORTS.sample(n=num_supports, random_state=44)
+    
+    df_balanced = pd.concat([df_SUPPORTS, df_REFUTES])
+    print("Processed dataset info:\n{}\n".format(
+                                    df_balanced['label'].value_counts()
+                                    ))
+    return df_balanced.to_dict('records')
         
 
 if __name__ == "__main__":
@@ -167,7 +184,7 @@ if __name__ == "__main__":
     from multiprocessing import Process
 
     # load train.json
-    json_fname = 'train.json'
+    json_fname = 'devset.json'
     assert json_fname.endswith('.json'), "training json must end with .json."
     with open('../dataset/{}'.format(json_fname), 'r') as f:
         train_json = json.load(f)
@@ -201,30 +218,11 @@ if __name__ == "__main__":
             p.start()
     else:
         # ASYNC ONLY
-        suffix = str(max_seq_length) + '_slightly_more_supports' + '.tfrecord'
+        # suffix = str(max_seq_length) + '_slightly_more_supports' + '.tfrecord'
+        suffix = 'raw_string.tfrecord'
         path = '../dataset/tfrecords/' + prefix + '_' + suffix
         
-        df = pd.DataFrame(train_json)
-        df = df[df.label != "NOT ENOUGH LABEL"]
-        df = df.sort_values(by='label', ascending=True)
-        print("Dataset preview:\n{}\n".format(df.head()))
-        print("Dataset info:\n{}\n".format(df['label'].value_counts()))
-
-        print("Preprocessing dataset...")
-        df_SUPPORTS = df[df.label == "SUPPORTS"]
-        df_REFUTES = df[df.label == "REFUTES"]
-
-        # num_supports = len(df_REFUTES)        ## balanced
-        num_supports = int(len(df_SUPPORTS)*0.6)
-        df_SUPPORTS = df_SUPPORTS.sample(n=num_supports, random_state=44)
-        
-        df_balanced = pd.concat([df_SUPPORTS, df_REFUTES])
-        print("Processed dataset info:\n{}\n".format(
-                                        df_balanced['label'].value_counts()
-                                        ))
-
-
-        train_json_balanced = df_balanced.to_dict('records')
+        train_json_balanced = clean_data(train_json)
         
         args=(dba, path, train_json_balanced)
         

@@ -5,7 +5,7 @@ import multiprocessing
 from datetime import datetime
 import tensorflow as tf
 
-from fact_verification_system.classifier.models import textual_entailment
+from fact_verification_system.classifier.models import textual_entailment as te
 
 ## NOTE: Manually tune parameters in Hyperparams
 class Hyperparams(Enum):
@@ -22,12 +22,14 @@ class Model(Enum):
 
 def main():    
     # Parallel Extraction
-    suffix = "train_64_slightly_more_supports.tfrecord"      #NOTE: CHANGE THIS
+    # suffix = "train_64_slightly_more_supports.tfrecord"      #NOTE: CHANGE THIS
+    suffix = "train_raw_string.tfrecord"
     file_pattern = "../dataset/tfrecords/" + suffix
 
     ds = _extract(file_pattern)
 
-    suffix = "devset_64_slightly_more_supports.tfrecord"      #NOTE: CHANGE THIS
+    # suffix = "devset_64_slightly_more_supports.tfrecord"      #NOTE: CHANGE THIS
+    suffix = "devset_raw_string.tfrecord"
     file_pattern = "../dataset/tfrecords/" + suffix
 
     ds_val = _extract(file_pattern)
@@ -36,9 +38,15 @@ def main():
     print("Parsing TFRecords into dataset...")
     num_cpus = multiprocessing.cpu_count()
 
+    iter_ds = iter(ds)
+    for i, x in enumerate(iter_ds):
+        _parse_and_transform_str(x)
+        if i > 10:
+            break
+    exit()
 
-    ds = ds.map(_parse_and_transform, num_parallel_calls=num_cpus)
-    ds_val = ds_val.map(_parse_and_transform, num_parallel_calls=num_cpus)
+    ds = ds.map(_parse_and_transform_str, num_parallel_calls=num_cpus)
+    ds_val = ds_val.map(_parse_and_transform_str, num_parallel_calls=num_cpus)
 
     # Cached
     ds = ds.cache()
@@ -54,7 +62,8 @@ def main():
     print("Dataset prefetched into buffer.")
     
     # Model
-    model = textual_entailment.create_bert_model(max_seq_length=Model.MAX_SEQ_LENGTH.value)
+    # model = te.create_bert_model(max_seq_length=Model.MAX_SEQ_LENGTH.value)
+    model = te.create_bilstm_model()
     model.compile(optimizer=Hyperparams.OPTIMIZER.value,
                 loss=Hyperparams.LOSS.value,
                 metrics=Hyperparams.METRICS.value)
@@ -130,6 +139,26 @@ def _parse_and_transform(serialized)-> dict:
     target_dict = {'target': target}
 
     return (embeddings_dict, target_dict)
+
+def _parse_and_transform_str(serialized)-> dict:
+    feature_description = {
+        'input_0': tf.io.VarLenFeature(dtype=tf.string),
+        'input_1': tf.io.VarLenFeature(dtype=tf.string),
+        'target': tf.io.FixedLenFeature([], tf.int64)
+    }
+    example = tf.io.parse_single_example(serialized, feature_description)
+    # transform
+    target = example.pop('target')
+    target = tf.reshape(target, ())
+    
+    string_dict = example
+    print(tf.train.Example().ParseFromString(serialized.numpy()))
+    x = tf.io.decode_raw(string_dict['input_0'], output_type='half')
+    # x = string_dict['input_0']
+    print(x)
+    target_dict = {'target': target}
+
+    return (string_dict, target_dict)
 
 
 if __name__ == "__main__":

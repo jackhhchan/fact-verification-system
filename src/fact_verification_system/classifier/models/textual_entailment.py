@@ -67,26 +67,30 @@ def create_albert_model(max_seq_length):
                 outputs=d_2)
 
 
-def create_bilstm_model():
+def create_bilstm_model(time_steps=1):
     input_0 = tf.keras.layers.Input(shape=(), dtype=tf.string,
                                     name='seq_0')
     input_1 = tf.keras.layers.Input(shape=(), dtype=tf.string,
                                     name='seq_1')
 
     emb_layer = hub.KerasLayer("https://tfhub.dev/google/tf2-preview/gnews-swivel-20dim/1", output_shape=[20],
-                           input_shape=[], dtype=tf.string)
+                           input_shape=[], dtype=tf.string, trainable=False)
 
     emb_0 = emb_layer(input_0)
     emb_1 = emb_layer(input_1)
 
 
     embs = tf.concat([emb_0, emb_1], 1)
+    # embs = tf.reshape(embs, [time_steps, embs.shape[1]])
 
-    # blstm_0 = Bidirectional(LSTM(36, return_sequences=True))(embs)    # requires 3 dimensions -- timesteps
+    # embs = tf.expand_dims(embs, axis=1)
+    # print(embs)
+
+    # blstm_0 = Bidirectional(LSTM(36))(embs)    # requires 3 dimensions -- timesteps
     # lstm_0 = LSTM(36)(embs)
 
-    d_0 = Dense(32, activation='relu')(embs)
-    d_1 = Dense(16, activation='relu')(d_0)
+    d_0 = Dense(40, activation='relu')(embs)
+    d_1 = Dense(20, activation='relu')(d_0)
     d_2 = Dense(1, activation='sigmoid')(d_1)
 
     return Model(inputs=[input_0, input_1], outputs=d_2)
@@ -94,7 +98,6 @@ def create_bilstm_model():
 if __name__ == "__main__":
     model = create_bilstm_model()
     print(model)
-
     exit()
 
 
