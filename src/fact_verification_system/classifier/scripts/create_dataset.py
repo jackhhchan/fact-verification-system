@@ -167,7 +167,7 @@ if __name__ == "__main__":
     from multiprocessing import Process
 
     # load train.json
-    json_fname = 'devset.json'
+    json_fname = 'train.json'
     assert json_fname.endswith('.json'), "training json must end with .json."
     with open('../dataset/{}'.format(json_fname), 'r') as f:
         train_json = json.load(f)
