@@ -2,6 +2,7 @@ import tensorflow as tf
 import tensorflow_hub as hub
 from tensorflow.keras import Model
 from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Bidirectional, LSTM
 
 def create_bert_model(max_seq_length):
     """
@@ -64,6 +65,38 @@ def create_albert_model(max_seq_length):
 
     return Model(inputs=[input_ids, input_mask, segment_ids],
                 outputs=d_2)
+
+
+def create_bilstm_model():
+    input_0 = tf.keras.layers.Input(shape=(), dtype=tf.string,
+                                    name='seq_0')
+    input_1 = tf.keras.layers.Input(shape=(), dtype=tf.string,
+                                    name='seq_1')
+
+    emb_layer = hub.KerasLayer("https://tfhub.dev/google/tf2-preview/gnews-swivel-20dim/1", output_shape=[20],
+                           input_shape=[], dtype=tf.string)
+
+    emb_0 = emb_layer(input_0)
+    emb_1 = emb_layer(input_1)
+
+
+    embs = tf.concat([emb_0, emb_1], 1)
+
+    # blstm_0 = Bidirectional(LSTM(36, return_sequences=True))(embs)    # requires 3 dimensions -- timesteps
+    # lstm_0 = LSTM(36)(embs)
+
+    d_0 = Dense(32, activation='relu')(embs)
+    d_1 = Dense(16, activation='relu')(d_0)
+    d_2 = Dense(1, activation='sigmoid')(d_1)
+
+    return Model(inputs=[input_0, input_1], outputs=d_2)
+
+if __name__ == "__main__":
+    model = create_bilstm_model()
+    print(model)
+
+    exit()
+
 
 if __name__ == "__main__":
     # tf.compat.v1.disable_eager_execution()
