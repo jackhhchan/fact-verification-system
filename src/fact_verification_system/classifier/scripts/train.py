@@ -17,17 +17,17 @@ class Hyperparams(Enum):
     BUFFER_SIZE = 1024
 
 class Model(Enum):
-    MAX_SEQ_LENGTH = 128        # NOTE: CHANGE THIS when dataset changes
+    MAX_SEQ_LENGTH = 64        # NOTE: CHANGE THIS when dataset changes
                                 #       affects BERT Layer and dataset parsing.
 
 def main():    
     # Parallel Extraction
-    suffix = "train_128_slightly_more_supports.tfrecord"      #NOTE: CHANGE THIS
+    suffix = "train_64_slightly_more_supports.tfrecord"      #NOTE: CHANGE THIS
     file_pattern = "../dataset/tfrecords/" + suffix
 
     ds = _extract(file_pattern)
 
-    suffix = "devset_128_slightly_more_supports.tfrecord"      #NOTE: CHANGE THIS
+    suffix = "devset_64_slightly_more_supports.tfrecord"      #NOTE: CHANGE THIS
     file_pattern = "../dataset/tfrecords/" + suffix
 
     ds_val = _extract(file_pattern)
