@@ -24,16 +24,13 @@ def main():
     # Parallel Extraction
     suffix = "train_128_slightly_more_supports.tfrecord"      #NOTE: CHANGE THIS
     file_pattern = "../dataset/tfrecords/" + suffix
-    print("Reading from file pattern: {}".format(file_pattern))
-    if not input("Confirm? (y/n)\n") == 'y':
-            exit("Terminated.")
-    files = tf.data.Dataset.list_files(file_pattern)
-    
-    ds = files.interleave(lambda x:
-                    tf.data.TFRecordDataset(x),
-                    cycle_length=4,
-                    num_parallel_calls=tf.data.experimental.AUTOTUNE)
-    print("Extracted all TFRecords with pattern {}".format(file_pattern))
+
+    ds = _extract(file_pattern)
+
+    suffix = "devset_128_slightly_more_supports.tfrecord"      #NOTE: CHANGE THIS
+    file_pattern = "../dataset/tfrecords/" + suffix
+
+    ds_val = _extract(file_pattern)
 
     # Parallel Parsing & Transformation
     print("Parsing TFRecords into dataset...")
@@ -41,18 +38,23 @@ def main():
 
 
     ds = ds.map(_parse_and_transform, num_parallel_calls=num_cpus)
+    ds_val = ds_val.map(_parse_and_transform, num_parallel_calls=num_cpus)
 
     # Cached
     ds = ds.cache()
+    ds_val = ds_val.cache()
     print("Dataset cached to memory.")
     # Parallel Loading
     ds = ds.shuffle(Hyperparams.BUFFER_SIZE.value).batch(Hyperparams.BATCH_SIZE.value)
+    ds_val = ds_val.shuffle(Hyperparams.BUFFER_SIZE.value).batch(Hyperparams.BATCH_SIZE.value)
+
     print("Dataset shuffled and batched into {}s".format(Hyperparams.BATCH_SIZE.value))
     ds = ds.prefetch(tf.data.experimental.AUTOTUNE)
+    ds_val = ds_val.prefetch(tf.data.experimental.AUTOTUNE)
     print("Dataset prefetched into buffer.")
     
     # Model
-    model = textual_entailment.create_model(max_seq_length=Model.MAX_SEQ_LENGTH.value)
+    model = textual_entailment.create_albert_model(max_seq_length=Model.MAX_SEQ_LENGTH.value)
     model.compile(optimizer=Hyperparams.OPTIMIZER.value,
                 loss=Hyperparams.LOSS.value,
                 metrics=Hyperparams.METRICS.value)
@@ -75,6 +77,7 @@ def main():
     _ = model.fit(x=ds,
             epochs=Hyperparams.EPOCHS.value,
             callbacks=[tensorboard_callback],
+            validation_data=ds_val,
             verbose=1)
 
     file_dir = log_dir + "/weights/"
@@ -95,6 +98,20 @@ def main():
         model.summary(print_fn=lambda x: fh.write(x + '\n'))
 
     print("Model history saved to {}.".format(log_dir))
+
+
+def _extract(file_pattern:str) -> tf.data.Dataset:
+    print("Reading from file pattern: {}".format(file_pattern))
+    if not input("Confirm? (y/n)\n") == 'y':
+            exit("Terminated.")
+    files = tf.data.Dataset.list_files(file_pattern)
+    
+    ds = files.interleave(lambda x:
+                    tf.data.TFRecordDataset(x),
+                    cycle_length=4,
+                    num_parallel_calls=tf.data.experimental.AUTOTUNE)
+    print("Extracted all TFRecords with pattern {}".format(file_pattern))
+    return ds
 
 
 def _parse_and_transform(serialized)-> dict:
