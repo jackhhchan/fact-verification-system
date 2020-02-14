@@ -91,6 +91,11 @@ if __name__ == "__main__":
         segment_ids=segment_ids
     )
     
+    tf.compat.v1.enable_eager_execution()
     #__call__ method
     albert_output = albert_module(albert_inputs, signature='tokens', as_dict=True)
     print(albert_output)
+
+    print(albert_output['pooled_output'])
+    print(type(albert_output['pooled_output']))
+
