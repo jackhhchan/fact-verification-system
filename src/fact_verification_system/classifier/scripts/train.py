@@ -10,7 +10,7 @@ from fact_verification_system.classifier.models import textual_entailment
 ## NOTE: Manually tune parameters in Hyperparams
 class Hyperparams(Enum):
     BATCH_SIZE = 64
-    EPOCHS = 20
+    EPOCHS = 80
     OPTIMIZER = 'adam'
     LOSS = 'binary_crossentropy'
     METRICS = ['accuracy']
