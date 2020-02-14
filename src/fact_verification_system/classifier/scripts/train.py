@@ -54,7 +54,7 @@ def main():
     print("Dataset prefetched into buffer.")
     
     # Model
-    model = textual_entailment.create_albert_model(max_seq_length=Model.MAX_SEQ_LENGTH.value)
+    model = textual_entailment.create_bert_model(max_seq_length=Model.MAX_SEQ_LENGTH.value)
     model.compile(optimizer=Hyperparams.OPTIMIZER.value,
                 loss=Hyperparams.LOSS.value,
                 metrics=Hyperparams.METRICS.value)

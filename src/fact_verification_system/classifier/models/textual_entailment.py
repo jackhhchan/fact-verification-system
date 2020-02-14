@@ -66,7 +66,7 @@ def create_albert_model(max_seq_length):
                 outputs=d_2)
 
 if __name__ == "__main__":
-    tf.compat.v1.disable_eager_execution()
+    # tf.compat.v1.disable_eager_execution()
 
     input_ids = [[1, 2, 3, 4, 5]]
     input_mask = [[0, 0, 0, 0, 0]]
@@ -81,7 +81,7 @@ if __name__ == "__main__":
 
 
     albert_module = hub.Module(
-                    "https://tfhub.dev/google/albert_base/3",
+                    "https://tfhub.dev/google/albert_base/2",
                     trainable=False)
 
     # Specified Inputs
