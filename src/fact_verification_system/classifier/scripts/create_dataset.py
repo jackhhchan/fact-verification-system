@@ -19,7 +19,7 @@ from postgres.db_admin import DatabaseAdmin
 from postgres.db_query import DatabaseQuery as dbq
 from fact_verification_system.classifier.pipeline.bert.preprocess import get_embeddings
 
-max_seq_length = 128        # affects _get_embeddings()
+max_seq_length = 64        # affects _get_embeddings()
 
 import cProfile, pstats, io
 def profile(fnc):
