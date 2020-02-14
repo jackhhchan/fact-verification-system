@@ -66,38 +66,31 @@ def create_albert_model(max_seq_length):
                 outputs=d_2)
 
 if __name__ == "__main__":
-    # tf.compat.v1.disable_eager_execution()
+    tf.compat.v1.disable_eager_execution()
 
-    # input_ids = [[1, 2, 3, 4, 5]]
-    # input_mask = [[0, 0, 0, 0, 0]]
-    # segment_ids = [[0, 0, 0, 0, 0]]
+    input_ids = [[1, 2, 3, 4, 5]]
+    input_mask = [[0, 0, 0, 0, 0]]
+    segment_ids = [[0, 0, 0, 0, 0]]
 
-    # input_ids = tf.keras.layers.Input(shape=(128,), dtype=tf.int32,
-    #                                         name="input_ids")
-    # input_mask = tf.keras.layers.Input(shape=(128,), dtype=tf.int32,
-    #                                     name="input_mask")
-    # segment_ids = tf.keras.layers.Input(shape=(128,), dtype=tf.int32,
-    #                                         name="segment_ids")
+    input_ids = tf.keras.layers.Input(shape=(128,), dtype=tf.int32,
+                                            name="input_ids")
+    input_mask = tf.keras.layers.Input(shape=(128,), dtype=tf.int32,
+                                        name="input_mask")
+    segment_ids = tf.keras.layers.Input(shape=(128,), dtype=tf.int32,
+                                            name="segment_ids")
 
 
-    # albert_module = hub.Module(
-    #                 "https://tfhub.dev/google/albert_base/3",
-    #                 trainable=False)
+    albert_module = hub.Module(
+                    "https://tfhub.dev/google/albert_base/3",
+                    trainable=False)
 
-    # # Specified Inputs
-    # albert_inputs = dict(
-    #     input_ids=input_ids,
-    #     input_mask=input_mask,
-    #     segment_ids=segment_ids
-    # )
+    # Specified Inputs
+    albert_inputs = dict(
+        input_ids=input_ids,
+        input_mask=input_mask,
+        segment_ids=segment_ids
+    )
     
-    # #__call__ method
-    # albert_output = albert_module(albert_inputs, signature='tokens', as_dict=True)
-    # print(albert_output)
-
-
-
-    model = create_albert_model(128)
-    print(model)
-    print(dir(model))
-    print(type(model))
+    #__call__ method
+    albert_output = albert_module(albert_inputs, signature='tokens', as_dict=True)
+    print(albert_output)
