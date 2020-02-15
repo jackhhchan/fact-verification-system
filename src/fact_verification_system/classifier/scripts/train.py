@@ -56,7 +56,7 @@ def main():
     
     # Model
     # model = te.create_bert_model(max_seq_length=Model.MAX_SEQ_LENGTH.value)
-    model = te.create_bilstm_model()
+    model = te.create_bert_model()                                        # NOTE: CHANGE THIS
     model.compile(optimizer=Hyperparams.OPTIMIZER.value,
                 loss=Hyperparams.LOSS.value,
                 metrics=Hyperparams.METRICS.value)
