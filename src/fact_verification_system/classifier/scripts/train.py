@@ -22,14 +22,14 @@ class Model(Enum):
 
 def main():    
     # Parallel Extraction
-    # suffix = "train_64_slightly_more_supports.tfrecord"      #NOTE: CHANGE THIS
-    suffix = "train_raw_string.tfrecord"
+    suffix = "train_64_slightly_more_supports.tfrecord"      #NOTE: CHANGE THIS
+    # suffix = "train_raw_string.tfrecord"
     file_pattern = "../dataset/tfrecords/" + suffix
 
     ds = _extract(file_pattern)
 
-    # suffix = "devset_64_slightly_more_supports.tfrecord"      #NOTE: CHANGE THIS
-    suffix = "devset_raw_string.tfrecord"
+    suffix = "devset_64_slightly_more_supports.tfrecord"      #NOTE: CHANGE THIS
+    # suffix = "devset_raw_string.tfrecord"
     file_pattern = "../dataset/tfrecords/" + suffix
 
     ds_val = _extract(file_pattern)
@@ -38,15 +38,8 @@ def main():
     print("Parsing TFRecords into dataset...")
     num_cpus = multiprocessing.cpu_count()
 
-    iter_ds = iter(ds)
-    for i, x in enumerate(iter_ds):
-        _parse_and_transform_str(x)
-        if i > 10:
-            break
-    exit()
-
-    ds = ds.map(_parse_and_transform_str, num_parallel_calls=num_cpus)
-    ds_val = ds_val.map(_parse_and_transform_str, num_parallel_calls=num_cpus)
+    ds = ds.map(_parse_and_transform, num_parallel_calls=num_cpus)          # NOTE: CHANGE THIS
+    ds_val = ds_val.map(_parse_and_transform, num_parallel_calls=num_cpus)  # NOTE: CHANGE THIS
 
     # Cached
     ds = ds.cache()
