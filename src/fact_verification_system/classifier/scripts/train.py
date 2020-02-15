@@ -81,11 +81,14 @@ def main():
     if not os.path.isdir(log_dir):
         os.makedirs(log_dir)
     
+    # callbacks
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir)
+    earlystopping_callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=10)
+
 
     _ = model.fit(x=ds,
             epochs=Hyperparams.EPOCHS.value,
-            callbacks=[tensorboard_callback],
+            callbacks=[tensorboard_callback, earlystopping_callback],
             validation_data=ds_val,
             verbose=1)
 
