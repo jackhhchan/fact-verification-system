@@ -70,26 +70,29 @@ def main():
 
     timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
 
-    log_dir = history_dir + "logs/" + timestamp
+    log_dir = history_dir + timestamp
     if not os.path.isdir(log_dir):
         os.makedirs(log_dir)
     
     # callbacks
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir)
     earlystopping_callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=10)
+    model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(filepath=log_dir+'/model_weights.hdf5',
+                                                                save_best_only=True,
+                                                                save_weights_only=True)
 
 
     _ = model.fit(x=ds,
             epochs=Hyperparams.EPOCHS.value,
-            callbacks=[tensorboard_callback, earlystopping_callback],
+            callbacks=[tensorboard_callback, earlystopping_callback, model_checkpoint_callback],
             validation_data=ds_val,
             verbose=1)
 
-    file_dir = log_dir + "/weights/"
-    if not os.path.isdir(file_dir):
-        os.makedirs(file_dir)
-    filepath = file_dir + "bert_model_weights.h5"
-    model.save_weights(filepath=filepath)
+    # file_dir = log_dir + "/weights/"
+    # if not os.path.isdir(file_dir):
+    #     os.makedirs(file_dir)
+    # filepath = file_dir + "bert_model_weights.h5"
+    # model.save_weights(filepath=filepath)
 
     config_dir = log_dir + "/config/"
     if not os.path.isdir(config_dir):
