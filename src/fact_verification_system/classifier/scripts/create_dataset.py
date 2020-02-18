@@ -19,7 +19,7 @@ from postgres.db_admin import DatabaseAdmin
 from postgres.db_query import DatabaseQuery as dbq
 from fact_verification_system.classifier.pipeline.bert.preprocess import get_embeddings
 
-max_seq_length = 64        # affects _get_embeddings()
+max_seq_length = 128        # affects _get_embeddings()
 
 import cProfile, pstats, io
 def profile(fnc):
@@ -59,13 +59,13 @@ async def write_to_tfrecord(writer, sess, d, i):
             # evidence 
             sent = await dbq.async_query_sentence(sess, page_id, sent_idx)            
             ### processed bert input embeddings -> tfrecords
-            # bert_sents = (_preprocess_string(claim), _preprocess_string(sent))
-            # example = await _get_embeddings_example(bert_sents, label, max_seq_length)
+            bert_sents = (_preprocess_string(claim), _preprocess_string(sent))
+            example = await _get_embeddings_example(bert_sents, label, max_seq_length)
             if sent == None:
                 continue
 
-            bert_sents = (claim, sent)
-            example = await _get_strings_example(bert_sents, label)
+            # bert_sents = (claim, sent)
+            # example = await _get_strings_example(bert_sents, label)
             writer.write(example.SerializeToString())
         except AttributeError:
             print("[CREATE_DS] {}:{} returned None. Skipped.".format(page_id, sent_idx))
@@ -156,10 +156,15 @@ def _bytes_feature(value) -> tf.train.Feature:
 # Name: label, dtype: int64
 
 def clean_data(train_json:dict) -> dict:
-    # Data Cleaning
+    """ Cleans dataset json mapper 
+    
+    - balancing dataset
+    - 
+    """
     df = pd.DataFrame(train_json)
     df = df[df.label != "NOT ENOUGH LABEL"]
     df = df.sort_values(by='label', ascending=True)
+    
     print("Dataset preview:\n{}\n".format(df.head()))
     print("Dataset info:\n{}\n".format(df['label'].value_counts()))
 
@@ -167,14 +172,15 @@ def clean_data(train_json:dict) -> dict:
     df_SUPPORTS = df[df.label == "SUPPORTS"]
     df_REFUTES = df[df.label == "REFUTES"]
 
-    # num_supports = len(df_REFUTES)        ## balanced
-    num_supports = int(len(df_SUPPORTS)*0.6)
+    num_supports = len(df_REFUTES)        # balanced with refutes
+    # num_supports = int(len(df_SUPPORTS)*0.6)  ## Keep 60% only.
     df_SUPPORTS = df_SUPPORTS.sample(n=num_supports, random_state=44)
     
     df_balanced = pd.concat([df_SUPPORTS, df_REFUTES])
     print("Processed dataset info:\n{}\n".format(
                                     df_balanced['label'].value_counts()
                                     ))
+
     return df_balanced.to_dict('records')
         
 
@@ -184,7 +190,7 @@ if __name__ == "__main__":
     from multiprocessing import Process
 
     # load train.json
-    json_fname = 'devset.json'
+    json_fname = 'train.json'
     assert json_fname.endswith('.json'), "training json must end with .json."
     with open('../dataset/{}'.format(json_fname), 'r') as f:
         train_json = json.load(f)
@@ -192,9 +198,8 @@ if __name__ == "__main__":
 
     print("{} training rows.".format(len(train_json)))
     
-    ##### tfrecords
+    ##### tfrecords naming
     prefix = json_fname[:-5]
-    num_examples = 5000
 
     #### database
     dba = DatabaseAdmin('postgres/config.yaml')
@@ -207,6 +212,7 @@ if __name__ == "__main__":
         processes = 1
         print("Spawning %d processes..." %(processes))
 
+        num_examples = 5000
         jobs = []
         for i in range(processes):
             path = prefix + '_512_balanced_' + str(i) + '.tfrecord'
@@ -219,7 +225,8 @@ if __name__ == "__main__":
     else:
         # ASYNC ONLY
         # suffix = str(max_seq_length) + '_slightly_more_supports' + '.tfrecord'
-        suffix = 'raw_string.tfrecord'
+        suffix = str(max_seq_length) + '_' + 'balanced' + '.tfrecord'
+        # suffix = 'raw_string.tfrecord'          # NOTE: CHANGE THIS
         path = '../dataset/tfrecords/' + prefix + '_' + suffix
         
         train_json_balanced = clean_data(train_json)
@@ -236,4 +243,4 @@ if __name__ == "__main__":
         s = time.time()
         loop.run_until_complete(main(*args))
         e = time.time()
-        print("Elapsed {}s, {:.2f}s per example.".format((e-s), (e-s)/float(num_examples)))
+        print("Elapsed {}s, {:.2f}s per example.".format((e-s), (e-s)/float(len(train_json_balanced))))

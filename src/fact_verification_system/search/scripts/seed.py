@@ -13,11 +13,20 @@ def seed():
     config = 'fact_verification_system/search/config.yaml'
     es = WikiSearchAdmin(config).es
 
+    prompt_str = "Are you sure you want to seed the elastic search database?\n\
+(This will delete the existing 'wiki' index if it exists)\n\
+Enter y/n: "
+
+    confirm_prompt = input(prompt_str)
+    
+    if confirm_prompt != 'y':
+        exit("Exited.")
+
     # ES 7.0 has removed mapping types, API calls are now Typeless
     print("Creating new index: {}...".format(index_name))
-    # if es.indices.exists(index=index_name):
-    #     es.indices.delete(index=index_name)
-    # es.indices.create(index=index_name)
+    if es.indices.exists(index=index_name):
+        es.indices.delete(index=index_name)
+    es.indices.create(index=index_name)
     
     print("Seeding newly created index: {}...".format(index_name))
     cpu_count = multiprocessing.cpu_count()
@@ -51,7 +60,7 @@ def _iter_wiki_data_for_es(index_name):
             yield {
             "_index":index_name,
             'page_id': parsed[0],
-            'sent_idx': parsed[1],
+            'sent_idx': int(parsed[1]),
             'sentence': parsed[2],
         }
 
