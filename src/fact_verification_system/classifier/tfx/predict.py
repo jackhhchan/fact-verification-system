@@ -26,7 +26,11 @@ class TFXPredict(object):
         self.port = 8501
         self.max_seq_length = max_seq_length
         
-        self._check_status()
+        try:
+            self._check_model_status()
+        except ConnectionError as e:
+            print("[TFX] Unable to connect to tensorflow serving on port {}".format(self.port))
+            raise e
 
     @property
     def tfx_url(self):
@@ -48,7 +52,7 @@ class TFXPredict(object):
         return list([self._get_label(pred[0]) for pred in predictions])
 
 
-    def _check_status(self):
+    def _check_model_status(self):
 
         json_res = requests.get(self.tfx_url)
         state = json_res["model_version_status"]["state"]
