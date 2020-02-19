@@ -79,12 +79,12 @@ def main():
     
     # callbacks
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir)
-    earlystopping_callback = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=10)
+    earlystopping_callback = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=10)
     model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(filepath=log_dir+'/model_weights.hdf5',
                                                                 save_best_only=True,
                                                                 save_weights_only=True)
 
-
+    print("Writing to {}...".format(log_dir))
     _ = model.fit(x=ds,
             epochs=Hyperparams.EPOCHS.value,
             callbacks=[tensorboard_callback, earlystopping_callback, model_checkpoint_callback],
