@@ -14,6 +14,7 @@ pp = pprint.PrettyPrinter(indent=2).pprint
 from fact_verification_system.search.wiki_search_admin import WikiSearchAdmin
 from fact_verification_system.search.wiki_search_query import WikiSearchQuery as wsq
 from fact_verification_system.sentence_selection.sentence_selection import SentenceSelection
+from fact_verification_system.classifier.tfx.predict import TFXPredict
 
 
 api = Api(app)
@@ -22,6 +23,7 @@ config = 'fact_verification_system/search/config.yaml'
 es = WikiSearchAdmin(config).es
 ss = SentenceSelection()
 
+tfxp = TFXPredict()
 
 @api.route('/health')
 class Health(Resource):
@@ -58,10 +60,9 @@ class Evidence(Resource):
             # send claim and sentence pairs to classifier
             filtered_sentences = (sent for (_, sent) in filtered_sentences)
             classifier_inputs = map(lambda sent: (claim, sent), filtered_sentences)
-            for bert_sents in classifier_inputs:
-                pass    # make prediction
-                
-            preds = list()
+
+            # make prediction
+            preds =  tfxp.post_predictions(classifier_inputs)   
             return formattedResponse(meta=None, data=preds)
             
 
