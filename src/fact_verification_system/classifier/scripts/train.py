@@ -23,12 +23,14 @@ class Model(Enum):
 def main():    
     # Parallel Extraction
     suffix = "train_64_slightly_more_supports.tfrecord"      #NOTE: CHANGE THIS
+    suffix = "train_64_balanced_10000_samples.tfrecord"
     # suffix = "train_raw_string.tfrecord"
     file_pattern = "../dataset/tfrecords/" + suffix
 
     ds = _extract(file_pattern)
 
-    suffix = "devset_64_slightly_more_supports.tfrecord"      #NOTE: CHANGE THIS
+    suffix = "devset" + suffix[5:]      #NOTE: CHANGE THIS
+    suffix = "devset_64_balanced_2000_samples.tfrecord"
     # suffix = "devset_raw_string.tfrecord"
     file_pattern = "../dataset/tfrecords/" + suffix
 
@@ -55,6 +57,7 @@ def main():
     print("Dataset prefetched into buffer.")
     
     # Model
+    print("[IMPORTANT] {} max length used to build model.".format(Model.MAX_SEQ_LENGTH.value))
     model = te.create_bert_model(max_seq_length=Model.MAX_SEQ_LENGTH.value)
     # model = te.create_bilstm_model()                                        # NOTE: CHANGE THIS
     model.compile(optimizer=Hyperparams.OPTIMIZER.value,
