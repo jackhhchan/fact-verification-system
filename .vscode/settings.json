@@ -1,5 +1,0 @@
-{
-    "python.pythonPath": "/opt/miniconda3/envs/nlp/bin/python",
-    "python.linting.pylintEnabled": true,
-    "python.linting.enabled": true
-}

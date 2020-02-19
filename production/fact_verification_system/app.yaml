@@ -1,0 +1,6 @@
+runtime: python36
+service: default
+env: standard
+entrypoint: gunicorn -b :80 serve:app
+
+instance_class: F1
