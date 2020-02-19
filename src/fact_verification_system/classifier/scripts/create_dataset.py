@@ -19,7 +19,7 @@ from postgres.db_admin import DatabaseAdmin
 from postgres.db_query import DatabaseQuery as dbq
 from fact_verification_system.classifier.pipeline.bert.preprocess import get_embeddings
 
-max_seq_length = 128        # affects _get_embeddings()
+max_seq_length = 64        # affects _get_embeddings()     NOTE: CHANGE THIS
 
 import cProfile, pstats, io
 def profile(fnc):
@@ -155,7 +155,7 @@ def _bytes_feature(value) -> tf.train.Feature:
 # 0    29775
 # Name: label, dtype: int64
 
-def clean_data(train_json:dict) -> dict:
+def clean_data(train_json:dict) -> pd.DataFrame:
     """ Cleans dataset json mapper 
     
     - balancing dataset
@@ -165,10 +165,10 @@ def clean_data(train_json:dict) -> dict:
     df = df[df.label != "NOT ENOUGH LABEL"]
     df = df.sort_values(by='label', ascending=True)
     
-    print("Dataset preview:\n{}\n".format(df.head()))
-    print("Dataset info:\n{}\n".format(df['label'].value_counts()))
+    print("\nRaw Dataset preview:\n{}".format(df.head()))
+    print("Raw Dataset info:\n{}\n".format(df['label'].value_counts()))
 
-    print("Preprocessing dataset...")
+    print("Cleaning dataset...")
     df_SUPPORTS = df[df.label == "SUPPORTS"]
     df_REFUTES = df[df.label == "REFUTES"]
 
@@ -177,11 +177,35 @@ def clean_data(train_json:dict) -> dict:
     df_SUPPORTS = df_SUPPORTS.sample(n=num_supports, random_state=44)
     
     df_balanced = pd.concat([df_SUPPORTS, df_REFUTES])
-    print("Processed dataset info:\n{}\n".format(
+    print("Cleaned dataset iobservations for each label:\n{}\n".format(
                                     df_balanced['label'].value_counts()
                                     ))
 
-    return df_balanced.to_dict('records')
+    return df_balanced
+
+
+def _reduced_dataset(df:pd.DataFrame, sample_size:int):
+    """ reduce dataset size but keep balanced 
+    
+    random_state set for reproducible results.
+    """
+    print("Reducing dataset...")
+    df_supports = df[df['label'] == 'SUPPORTS']
+    df_refutes = df[df['label'] == 'REFUTES']
+
+    size = int(sample_size/2)
+
+    random_state = 123
+    df_supports = df_supports.sample(n=size, random_state=random_state)
+    df_refutes = df_refutes.sample(n=size, random_state=random_state)
+
+    df_reduced = pd.concat([df_supports, df_refutes])
+
+    print("Reduced dataset observations for each label:\n{}\n".format(
+                                    df_reduced['label'].value_counts()
+                                    ))
+    
+    return df_reduced
         
 
 if __name__ == "__main__":
@@ -190,7 +214,7 @@ if __name__ == "__main__":
     from multiprocessing import Process
 
     # load train.json
-    json_fname = 'train.json'
+    json_fname = 'devset.json'
     assert json_fname.endswith('.json'), "training json must end with .json."
     with open('../dataset/{}'.format(json_fname), 'r') as f:
         train_json = json.load(f)
@@ -224,18 +248,27 @@ if __name__ == "__main__":
             p.start()
     else:
         # ASYNC ONLY
-        # suffix = str(max_seq_length) + '_slightly_more_supports' + '.tfrecord'
-        suffix = str(max_seq_length) + '_' + 'balanced' + '.tfrecord'
-        # suffix = 'raw_string.tfrecord'          # NOTE: CHANGE THIS
+        # NOTE: CHANGE THIS
+        # suffix = str(max_seq_length) + '_slightly_more_supports' + '.tfrecord'            ## unbalanced full dataset
+        suffix = str(max_seq_length) + '_' + 'balanced' + '.tfrecord'                       ## balanced full dataset
+        reduced_sample_size = 2000
+        suffix = str(max_seq_length) + '_' + 'balanced' + '_' + str(reduced_sample_size) + '_samples' + '.tfrecord'        # balanced reduced dataset
+        # suffix = 'raw_string.tfrecord'                                                    ## raw string only full dataset
         path = '../dataset/tfrecords/' + prefix + '_' + suffix
         
-        train_json_balanced = clean_data(train_json)
+        train_json_balanced_df = clean_data(train_json)
+        train_json_balanced_df = _reduced_dataset(train_json_balanced_df, sample_size=reduced_sample_size)           # NOTE: CHANGE THIS IF FULL DATASET
+
+        train_json_balanced = train_json_balanced_df.to_dict('records')
         
         args=(dba, path, train_json_balanced)
         
         # asyncio.run(main(*args))  # for python => 3.7
+        print("[IMPORTANT]: {} max sequence length used.\n".format(max_seq_length))
+
+        print("Data from {}".format(json_fname))
         print("Writing to path: {}".format(path))
-        if not input("Confirm? (y/n)\n") == 'y':
+        if not input("Confirm? (y/n): ") == 'y':
             exit("Terminated.")
 
         
