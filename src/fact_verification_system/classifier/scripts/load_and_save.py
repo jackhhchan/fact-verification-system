@@ -1,8 +1,10 @@
 """
 Build model,
 Load model weights (trained by gcp-vm)
-Save model in protobuf format.
-https://www.tensorflow.org/versions/r1.15/api_docs/python/tf/saved_model
+Save model in SavedFormat(protobuf) format.
+https://www.tensorflow.org/tfx/tutorials/serving/rest_simple#make_a_request_to_your_model_in_tensorflow_serving
+
+SavedFormat is used in TFX (tensorflow-serving).
 """
 
 import os
@@ -15,16 +17,17 @@ def main():
     model = te.create_bert_model(max_seq_length)
 
     print("Loading weights...")
-    weights_path = "../trained_models/tf-2-vm/model_weights.hdf5"
-    model.load_weights(weights_path)
+    WEIGHTS_DIR = "../trained_models/tf-2-vm"
+    WEIGHTS_FNAME = "model_weights.hdf5"
+    model.load_weights(os.path.join(WEIGHTS_DIR, WEIGHTS_FNAME))
 
     model.summary()
 
-    MODEL_DIR = "saved_model"
+    MODEL_DIR = "ModelSavedFormat"
     VERSION = 1
-    export_path = os.path.join(MODEL_DIR, str(VERSION))
+    export_path = os.path.join(WEIGHTS_DIR, MODEL_DIR, str(VERSION))
 
-    tf.keras.models.saved_model(
+    tf.keras.models.save_model(
         model,
         export_path,
         overwrite=True,

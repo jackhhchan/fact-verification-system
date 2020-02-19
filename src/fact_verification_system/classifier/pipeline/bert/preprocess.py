@@ -16,12 +16,14 @@ INPUT_TYPE = np.int32
 def get_embeddings(
     sents:Tuple[str],
     max_seq_length:int,     # combined seq length for sentence pairs
-    bert_url="https://tfhub.dev/tensorflow/bert_en_uncased_L-12_H-768_A-12/1"
+    bert_url="https://tfhub.dev/tensorflow/bert_en_uncased_L-12_H-768_A-12/1",
+    pythonList=False        
     ) -> Dict[str, list]:
     """ Returns a dictionary of embeddings as per (paper & tf_hub)
             - input_word_ids
             - input_mask
             - segment_ids
+        each of which are numpy arrays unless pythonList arg is set as True.
     """
     if not tokenizer:
         _create_tokenizer(bert_url)
@@ -45,6 +47,11 @@ def get_embeddings(
     input_word_ids = np.array(_get_ids(tokens, tokenizer, max_seq_length), dtype=np.int32)
     input_mask = np.array(_get_masks(tokens, max_seq_length), dtype=np.int32)
     segment_ids = np.array(_get_segments(tokens, max_seq_length), dtype=np.int32)
+
+    if pythonList:
+        input_word_ids = input_word_ids.tolist()
+        input_mask = input_mask.tolist()
+        segment_ids = segment_ids.tolist()
 
     assert len(input_word_ids) == max_seq_length, "input_word_ids must be equal max_seq_length."
     assert len(input_mask) == max_seq_length, "input_mask must be equal max_seq_length."
