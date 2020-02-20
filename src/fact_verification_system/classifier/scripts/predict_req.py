@@ -30,7 +30,8 @@ def main():
     )
     headers = {"content-type": "application/json"}
 
-    tf_serving_url = "http://localhost:8501/v1/models/nli-bert-classifier:predict"
+    # tf_serving_url = "http://localhost:8501/v1/models/nli-bert:predict"
+    tf_serving_url = "https://tfx-ddzqcpwcwq-an.a.run.app/v1/models/nli-bert:predict"
     # print("Sending to {}...\ndata: {}".format(tf_serving_url, data))
     
     
