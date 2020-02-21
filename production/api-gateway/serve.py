@@ -49,24 +49,27 @@ class Evidence(Resource):
             ## sentence selection
             # filtered sentences
             filtered_sentences = ss.filtered_sentences(claim, sentences)
+            print("Filtered sentences:")
             pp(filtered_sentences)
             # filtered indices
             filtered_indices = [i for i in range(0, limit)]
             for (i, _) in filtered_sentences:
                 filtered_indices.remove(i) 
-            pp(filtered_indices)
-
+            # print("Filtered indices:")
+            # pp(filtered_indices)
             ## classifier
             # send claim and sentence pairs to classifier
-            filtered_sentences = (sent for (_, sent) in filtered_sentences)
+            filtered_sentences = list([sent for (_, sent) in filtered_sentences])
             classifier_inputs = map(lambda sent: (claim, sent), filtered_sentences)
 
             # make prediction
             print("Classifying filtered sentences...")
-            preds =  tfxp.post_predictions(classifier_inputs)   
-            return formattedResponse(meta=None, data=preds)
-            
+            preds =  tfxp.post_predictions(classifier_inputs)
+            pp(preds)
 
+            preds_sentences = list(zip(filtered_sentences, preds.values()))
+
+            return formattedResponse(meta=None, data=preds_sentences)
         else:
             message = ("Request must contain json. "
                  "'data' field should contain the claim string.")

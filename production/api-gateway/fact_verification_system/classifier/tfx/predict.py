@@ -6,7 +6,7 @@ NOTE: Docker container tensorflow/serving must be running.
 
 import json
 import requests
-from typing import Tuple, List
+from typing import Tuple, List, Dict
 
 from fact_verification_system.classifier.pipeline.bert.preprocess import get_embeddings
 
@@ -37,7 +37,7 @@ class TFXPredict(object):
         # return "http://localhost:{}/v{}/models/{}".format(self.port, self.VERSION, self.MODEL_NAME)
         return "https://tfx-ddzqcpwcwq-an.a.run.app/v{}/models/{}".format(self.VERSION, self.MODEL_NAME)
      
-    def post_predictions(self, bert_sents_list:List[Tuple[str]]) -> List[str]:
+    def post_predictions(self, bert_sents_list:List[Tuple[str]]) -> Dict[int, str]:
         """ Returns a list of predicted labels. """
         instances = list()
         for bert_sents in bert_sents_list:
@@ -47,10 +47,16 @@ class TFXPredict(object):
         data = self._get_json_data(instances)
         headers = self._get_headers()
 
-        json_res = requests.post(self.tfx_url, data=data, headers=headers)
+        tfx_url_predict = self.tfx_url + ":predict"
 
-        predictions = json.loads(json_res.text)['predictions']
-        return list([self._get_label(pred[0]) for pred in predictions])
+        json_res = requests.post(tfx_url_predict, data=data, headers=headers)
+
+        if json_res.status_code == 200:
+            predictions = json_res.json()['predictions']
+            return dict({i: self._get_label(pred[0]) for (i, pred) in enumerate(predictions)})
+            # return list([self._get_label(pred[0]) for pred in predictions])
+        else:
+            return json_res.json()
 
 
     def _check_model_status(self):
