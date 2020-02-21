@@ -24,11 +24,15 @@ class WikiSearchAdmin(object):
         
         self._host = config['host']
         self._port = config['port']
-        self._user = config['user']
-        self._password = config['password']
-        self._timeout = 1000            # 1000 seconds
-
-        self._connect(self._host, self._port, self._user, self._password)
+        try:
+            self._user = config['user']
+            self._password = config['password']
+            self._timeout = 1000            # 1000 seconds
+            self._connect(self._host, self._port, self._user, self._password)
+        except Exception as e:
+            print("[WSA] User and password does not exist. Continuing...")
+            self._connect(self._host, self._port)
+        
 
 
     @property
