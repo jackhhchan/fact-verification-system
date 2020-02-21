@@ -12,7 +12,7 @@ from fact_verification_system.classifier.pipeline.bert.preprocess import get_emb
 
 # current model trained by vm.
 max_seq_length = 64         
-MODEL_NAME = "nli-bert-classifier"      # set when running docker container.
+MODEL_NAME = "nli-bert"                 # set when running docker container.
 VERSION = 1                             # set as export path when saving model. (load_and_save.py)
 
 class TFXPredict(object):
@@ -23,7 +23,7 @@ class TFXPredict(object):
         self.MODEL_NAME = MODEL_NAME    
         self.VERSION = str(VERSION)
 
-        self.port = 8501
+        self.port = 8080                        # cloud run default port
         self.max_seq_length = max_seq_length
         
         try:
@@ -34,7 +34,8 @@ class TFXPredict(object):
 
     @property
     def tfx_url(self):
-        return "http://localhost:{}/v{}/models/{}".format(self.port, self.VERSION, self.MODEL_NAME)
+        # return "http://localhost:{}/v{}/models/{}".format(self.port, self.VERSION, self.MODEL_NAME)
+        return "https://tfx-ddzqcpwcwq-an.a.run.app/v{}/models/{}".format(self.VERSION, self.MODEL_NAME)
      
     def post_predictions(self, bert_sents_list:List[Tuple[str]]) -> List[str]:
         """ Returns a list of predicted labels. """
@@ -55,7 +56,7 @@ class TFXPredict(object):
     def _check_model_status(self):
 
         json_res = requests.get(self.tfx_url)
-        state = json.load(json_res)["model_version_status"][0]["state"]
+        state = json.loads(json_res.text)["model_version_status"][0]["state"]
         if not state == "AVAILABLE":
             raise ConnectionAbortedError(
         "[TFX] Model: {}, Version: {} is not available.".format(
