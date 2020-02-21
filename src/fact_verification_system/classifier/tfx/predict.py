@@ -55,7 +55,7 @@ class TFXPredict(object):
     def _check_model_status(self):
 
         json_res = requests.get(self.tfx_url)
-        state = json_res["model_version_status"]["state"]
+        state = json.load(json_res)["model_version_status"][0]["state"]
         if not state == "AVAILABLE":
             raise ConnectionAbortedError(
         "[TFX] Model: {}, Version: {} is not available.".format(

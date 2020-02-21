@@ -24,10 +24,15 @@ class WikiSearchAdmin(object):
         
         self._host = config['host']
         self._port = config['port']
-        self._user = config['user']
-        self._password = config['password']
+        try:
+            self._user = config['user']
+            self._password = config['password']
+            self._connect(self._host, self._port, self._user, self._password)
+        except Exception as e:
+            print("[WSA] No user or password. Continuing...")
+            self._connect(self._host, self._port)
 
-        self._connect(self._host, self._port, self._user, self._password)
+        
 
 
     @property
@@ -53,14 +58,13 @@ class WikiSearchAdmin(object):
                                             http_auth=(user, password),
                                             scheme="https")
         else:
-            self.__class__.es = Elasticsearch(hosts=[
+            self.__class__._es = Elasticsearch(hosts=[
                                             {'host': host, 'port': port}])
                                         
         try: 
            self._es.ping()
         except Exception as e:
-            raise ConnectionError("[Search] Elasticsearch connection \
-                to {}:{} is not established.".format(self._host, self._port))
+            raise ConnectionError("[Search] Elasticsearch connection to {}:{} is not established.".format(self._host, self._port))
         else:
             print("[WSA] Connection to Elasticsearch established.")
 
