@@ -24,8 +24,10 @@ class WikiSearchAdmin(object):
         
         self._host = config['host']
         self._port = config['port']
+        self._user = config['user']
+        self._password = config['password']
 
-        self._connect(self._host, self._port)
+        self._connect(self._host, self._port, self._user, self._password)
 
 
     @property
@@ -44,11 +46,19 @@ class WikiSearchAdmin(object):
         return self._port
 
     
-    def _connect(self, host, port):
-        self.__class__._es = Elasticsearch(hosts=[
-            {'host': self._host, 'port': self._port}
-        ])
-        if not self._es.ping():
+    def _connect(self, host, port, user=None, password=None):
+        if user and password:
+            self.__class__._es = Elasticsearch(hosts=[
+                                            {'host': host, 'port': port}],
+                                            http_auth=(user, password),
+                                            scheme="https")
+        else:
+            self.__class__.es = Elasticsearch(hosts=[
+                                            {'host': host, 'port': port}])
+                                        
+        try: 
+           self._es.ping()
+        except Exception as e:
             raise ConnectionError("[Search] Elasticsearch connection \
                 to {}:{} is not established.".format(self._host, self._port))
         else:

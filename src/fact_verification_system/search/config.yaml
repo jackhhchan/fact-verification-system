@@ -1,2 +1,7 @@
-host: 0.0.0.0
-port: 9200
+# host: 0.0.0.0
+# port: 9200
+
+host: 01a4ec9b89a64b3b8ddf8ed132ae9460.australia-southeast1.gcp.elastic-cloud.com
+port: 9243
+user: elastic
+password: oM2gT2UDgf77SLS68iJFqrmv
