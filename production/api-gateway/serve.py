@@ -29,7 +29,7 @@ tfxp = TFXPredict()
 class Health(Resource):
     def get(self):
         # TODO: send a query to es, sentence selection then classifier.
-        return (formattedResponse(None, "Fact Verification System is active."), 200, {"Access-Control-Allow-Origin": "*"})
+        return formattedResponse(None, "Fact Verification System is active.")
 
 @api.route('/evidence')
 class Evidence(Resource):
@@ -68,12 +68,13 @@ class Evidence(Resource):
             pp(preds)
 
             preds_sentences = list(zip(filtered_sentences, preds.values()))
-            return (formattedResponse(meta=None, data=preds_sentences), 200, {"Access-Control-Allow-Origin": "*"})
+            return formattedResponse(meta=None, data=preds_sentences)
         else:
             message = ("Request must contain json. "
                  "'data' field should contain the claim string.")
             abort(400, message)
 
+# add CORS headers before sending response back
 @app.after_request
 def add_cors(response):
     response.headers["Access-Control-Allow-Origin"] = "*"
