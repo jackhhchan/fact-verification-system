@@ -5,7 +5,7 @@ from flask import Flask
 
 app = Flask(__name__)
 
-from flask import request, abort
+from flask import request, abort, Response
 from flask_restplus import Resource, Api, fields
 
 import pprint
@@ -29,7 +29,7 @@ tfxp = TFXPredict()
 class Health(Resource):
     def get(self):
         # TODO: send a query to es, sentence selection then classifier.
-        return formattedResponse(None, "Fact Verification System is active.")
+        return (formattedResponse(None, "Fact Verification System is active."), 200, {"Access-Control-Allow-Origin": "*"})
 
 @api.route('/evidence')
 class Evidence(Resource):
@@ -68,13 +68,17 @@ class Evidence(Resource):
             pp(preds)
 
             preds_sentences = list(zip(filtered_sentences, preds.values()))
-
-            return formattedResponse(meta=None, data=preds_sentences)
+            return (formattedResponse(meta=None, data=preds_sentences), 200, {"Access-Control-Allow-Origin": "*"})
         else:
             message = ("Request must contain json. "
                  "'data' field should contain the claim string.")
             abort(400, message)
 
+@app.after_request
+def add_cors(response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    return response
 
 
 

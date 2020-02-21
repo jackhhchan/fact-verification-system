@@ -18,9 +18,9 @@ class WikiSearchAdmin(object):
             with open(config_path, 'r') as f:
                 config = yaml.load(f, Loader=yaml.FullLoader)
         except FileNotFoundError:
-            print("[DBA] Config file not found.")
+            print("[WSA] Config file not found.")
         except Exception as e:
-            print("[DBA] {}".format(e))
+            print("[WSA] {}".format(e))
         
         self._host = config['host']
         self._port = config['port']
