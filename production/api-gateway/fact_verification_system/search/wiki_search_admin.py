@@ -60,7 +60,7 @@ class WikiSearchAdmin(object):
                                             use_ssl=True,
                                             timeout=self._timeout)
         else:
-            self.__class__.es = Elasticsearch(hosts=[
+            self.__class__._es = Elasticsearch(hosts=[
                                             {'host': host, 'port': port}])
                                         
         try: 
