@@ -251,7 +251,7 @@ if __name__ == "__main__":
         # NOTE: CHANGE THIS
         # suffix = str(max_seq_length) + '_slightly_more_supports' + '.tfrecord'            ## unbalanced full dataset
         suffix = str(max_seq_length) + '_' + 'balanced' + '.tfrecord'                       ## balanced full dataset
-        reduced_sample_size = 2000
+        reduced_sample_size = 200
         suffix = str(max_seq_length) + '_' + 'balanced' + '_' + str(reduced_sample_size) + '_samples' + '.tfrecord'        # balanced reduced dataset
         # suffix = 'raw_string.tfrecord'                                                    ## raw string only full dataset
         path = '../dataset/tfrecords/' + prefix + '_' + suffix

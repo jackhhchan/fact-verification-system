@@ -58,7 +58,7 @@ def create_albert_model(max_seq_length):
     #__call__ method
     albert_output = albert_module(albert_inputs, signature='tokens', as_dict=True)
     pool_embs = albert_output['pooled_output']
-    sequence_embs = albert_output['sequence_output']
+    sequence_embs = albert_output['sequence_output']            # an embedding for each token.
     d_0 = Dense(units=512, activation='relu')(pool_embs)
     d_1 = Dense(units=256, activation='relu')(d_0)
     d_2 = Dense(units=1, activation='sigmoid', name='target')(d_1)

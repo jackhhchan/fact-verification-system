@@ -13,6 +13,7 @@ import os
 from typing import List
 import asyncio
 from time import time
+from sqlalchemy import inspect
 
 from logger.logger import Logger, Modes
 from postgres.tables.wiki import Wiki
@@ -22,9 +23,29 @@ async def main():
     """ [Async] Insert to database. """
     dba = DatabaseAdmin('postgres/config.yaml')
     dba.connect()
+
+    tables = inspect(dba.engine).get_table_names()
+    if not 'wiki' in tables:
+        raise IndexError("Index Wiki not found. Please run setup.py")
+
+    path = '../dataset/wiki-pages-text'
+    print("Parsing text files in {}...".format(path))
+    wiki_fnames = [f for f in os.listdir(path) if f.endswith('.txt')]
+    
+    # split in half so half is commited to db first to clear RAM.
+    split = int(len(wiki_fnames)/4)
+    wiki_fnames_0 = wiki_fnames[:split]
+    wiki_fnames_1 = wiki_fnames[split:2*split]
+    wiki_fnames_2 = wiki_fnames[2*split:3*split]
+    wiki_fnames_3 = wiki_fnames[3*split:]
+
+    wiki_fnames_splits = [wiki_fnames_0, wiki_fnames_1, wiki_fnames_2, wiki_fnames_3]
+    
     s = time()
-    with dba.session() as session:
-        await asyncio.gather(*[insert(parsed, session) for parsed in wiki_data()])
+    for wiki_fnames_split in wiki_fnames_splits:
+        with dba.session() as session:
+            await asyncio.gather(*[insert(parsed, session) for parsed in wiki_data(path, wiki_fnames_split)])
+        
     print("Elapsed time: {}s".format(time()-s))
 
 #### Database ####
@@ -76,14 +97,12 @@ def parse_txt(line:str) -> List[str]:
 
 
 
-def wiki_data():
+def wiki_data(path:str, wiki_fnames:list):
     """ Generator for wiki data 
     
     Reads data from wiki-text files and generate formatted list.
     """
-    path = '../dataset/wiki-pages-text'
-    print("Parsing text files in {}...".format(path))
-    wiki_fnames = [f for f in os.listdir(path) if f.endswith('.txt')]
+
     for wiki_fname in wiki_fnames:
         print("[POSTGRES-SEED] Inserting {} to postgres db...".format(wiki_fname))
         with open("{}/{}".format(path, wiki_fname), 'r') as f:
