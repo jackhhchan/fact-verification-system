@@ -22,7 +22,7 @@ class CallbackParams(Enum):
     PATIENCE = 10
     # tensorboard
     HISTOGRAM_FREQ = 0
-    UPDATE_FREQ = 10           # default: epoch   -- either batch or epoch or integer (100 = per 100 batches)
+    UPDATE_FREQ = 'epoch'           # default: epoch   -- either batch or epoch or integer (100 = per 100 batches)
 
 class Model(Enum):
     MAX_SEQ_LENGTH = 64        # NOTE: CHANGE THIS when dataset changes
