@@ -12,7 +12,7 @@ def create_bert_model(max_seq_length):
     
     # download BERT layer
     bert_layer = hub.KerasLayer("https://tfhub.dev/tensorflow/bert_en_uncased_L-12_H-768_A-12/1",
-                            trainable=False)
+                            trainable=True)
     
     # Specified Inputs
     input_word_ids = tf.keras.layers.Input(shape=(max_seq_length,), dtype=tf.int32,
