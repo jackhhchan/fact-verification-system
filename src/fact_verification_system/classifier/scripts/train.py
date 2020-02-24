@@ -4,6 +4,7 @@ from enum import Enum
 import multiprocessing
 from datetime import datetime
 import tensorflow as tf
+from tensorflow.keras.optimizers import Adam
 
 from fact_verification_system.classifier.models import textual_entailment as te
 
@@ -11,10 +12,16 @@ from fact_verification_system.classifier.models import textual_entailment as te
 class Hyperparams(Enum):
     BATCH_SIZE = 64
     EPOCHS = 80
-    OPTIMIZER = 'adam'
+    OPTIMIZER = Adam(learning_rate=0.05)        # default 0.01
     LOSS = 'binary_crossentropy'
     METRICS = ['accuracy']
     BUFFER_SIZE = 1024
+    
+class CallbackParams(Enum):
+    # earlystopping 
+    PATIENCE = 3
+    # tensorboard
+    HISTOGRAM_FREQ = 0
 
 class Model(Enum):
     MAX_SEQ_LENGTH = 64        # NOTE: CHANGE THIS when dataset changes
@@ -60,10 +67,16 @@ def main():
     print("[IMPORTANT] {} max length used to build model.".format(Model.MAX_SEQ_LENGTH.value))
     model = te.create_bert_model(max_seq_length=Model.MAX_SEQ_LENGTH.value)
     # model = te.create_bilstm_model()                                        # NOTE: CHANGE THIS
+
     model.compile(optimizer=Hyperparams.OPTIMIZER.value,
                 loss=Hyperparams.LOSS.value,
                 metrics=Hyperparams.METRICS.value)
     model.summary()
+
+    # print(model.run_eagerly)
+    # print(model.layers)
+    # # print(model.variables)
+    # exit()
 
     
     # Training
@@ -71,15 +84,15 @@ def main():
     if not os.path.isdir(history_dir):
         os.makedirs(history_dir)
 
-    timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+    timestamp = datetime.now().strftime("%d.%m.%Y-%H.%M.%S")
 
     log_dir = history_dir + timestamp
     if not os.path.isdir(log_dir):
         os.makedirs(log_dir)
     
     # callbacks
-    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir)
-    earlystopping_callback = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=10)
+    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=CallbackParams.HISTOGRAM_FREQ.value)
+    earlystopping_callback = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=CallbackParams.PATIENCE.value)
     model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(filepath=log_dir+'/model_weights.hdf5',
                                                                 save_best_only=True,
                                                                 save_weights_only=True)
@@ -136,8 +149,12 @@ def _parse_and_transform(serialized)-> dict:
     # transform
     target = example.pop('target')
     target = tf.reshape(target, ())
+    target = tf.cast(target, tf.float32)
     
     embeddings_dict = example
+    for k, v in embeddings_dict.items():
+        embeddings_dict[k] = tf.cast(v, tf.float32)
+
     target_dict = {'target': target}
 
     return (embeddings_dict, target_dict)

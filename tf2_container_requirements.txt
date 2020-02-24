@@ -1,2 +1,7 @@
 tensorflow-hub
 sentencepiece
+pandas
+tqdm
+sqlalchemy
+pyyaml
+psycopg2-binary
