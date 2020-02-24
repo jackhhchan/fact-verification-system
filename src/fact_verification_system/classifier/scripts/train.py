@@ -12,16 +12,17 @@ from fact_verification_system.classifier.models import textual_entailment as te
 class Hyperparams(Enum):
     BATCH_SIZE = 64
     EPOCHS = 80
-    OPTIMIZER = Adam(learning_rate=0.05)        # default 0.01
+    OPTIMIZER = Adam(learning_rate=0.01)        # default 0.01
     LOSS = 'binary_crossentropy'
     METRICS = ['accuracy']
     BUFFER_SIZE = 1024
     
 class CallbackParams(Enum):
     # earlystopping 
-    PATIENCE = 3
+    PATIENCE = 10
     # tensorboard
     HISTOGRAM_FREQ = 0
+    UPDATE_FREQ = 10           # default: epoch   -- either batch or epoch or integer (100 = per 100 batches)
 
 class Model(Enum):
     MAX_SEQ_LENGTH = 64        # NOTE: CHANGE THIS when dataset changes
@@ -29,17 +30,17 @@ class Model(Enum):
 
 def main():    
     # Parallel Extraction
-    suffix = "train_64_slightly_more_supports.tfrecord"      #NOTE: CHANGE THIS
-    suffix = "train_64_balanced_10000_samples.tfrecord"
+    # suffix = "train_64_slightly_more_supports.tfrecord"      #NOTE: CHANGE THIS
+    suffix_train = "train_64_balanced_1000_samples.tfrecord"
     # suffix = "train_raw_string.tfrecord"
-    file_pattern = "../dataset/tfrecords/" + suffix
+    file_pattern = "../dataset/tfrecords/" + suffix_train
 
     ds = _extract(file_pattern)
 
-    suffix = "devset" + suffix[5:]      #NOTE: CHANGE THIS
-    suffix = "devset_64_balanced_2000_samples.tfrecord"
+    # suffix = "devset" + suffix[5:]      #NOTE: CHANGE THIS
+    suffix_dev = "devset_64_balanced_200_samples.tfrecord"
     # suffix = "devset_raw_string.tfrecord"
-    file_pattern = "../dataset/tfrecords/" + suffix
+    file_pattern = "../dataset/tfrecords/" + suffix_dev
 
     ds_val = _extract(file_pattern)
 
@@ -89,9 +90,16 @@ def main():
     log_dir = history_dir + timestamp
     if not os.path.isdir(log_dir):
         os.makedirs(log_dir)
-    
+
+    notes = input("Additional training notes:")
+    if notes:
+        with open(log_dir + '/additional-notes.txt', 'w') as fh:
+            fh.write(notes)
+
     # callbacks
-    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=CallbackParams.HISTOGRAM_FREQ.value)
+    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, 
+                                                        histogram_freq=CallbackParams.HISTOGRAM_FREQ.value,
+                                                        update_freq=CallbackParams.UPDATE_FREQ.value)
     earlystopping_callback = tf.keras.callbacks.EarlyStopping(monitor='loss', patience=CallbackParams.PATIENCE.value)
     model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(filepath=log_dir+'/model_weights.hdf5',
                                                                 save_best_only=True,
@@ -120,6 +128,9 @@ def main():
     with open(log_dir + '/model_summary.txt','w') as fh:
         # Pass the file handle in as a lambda function to make it callable
         model.summary(print_fn=lambda x: fh.write(x + '\n'))
+
+    with open(log_dir + '/datasets.txt', 'w') as fh:
+        fh.write("Datasets used:\n{}\n{}".format(suffix_train, suffix_dev))
 
     print("Model history saved to {}.".format(log_dir))
 
