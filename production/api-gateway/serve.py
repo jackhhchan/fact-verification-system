@@ -64,11 +64,12 @@ class Evidence(Resource):
 
             # make prediction
             print("Classifying filtered sentences...")
-            preds =  tfxp.post_predictions(classifier_inputs)
-            pp(preds)
-
-            preds_sentences = list(zip(filtered_sentences, preds.values()))
-            return formattedResponse(meta=None, data=preds_sentences)
+            data =  tfxp.post_predictions(classifier_inputs)
+            if data['status_code'] == 200:
+                preds_sentences = list(zip(filtered_sentences, data['predictions'].values()))
+                return formattedResponse(meta=None, data=preds_sentences)  
+            else:
+                abort(data['status_code'], data['reason'])
         else:
             message = ("Request must contain json. "
                  "'data' field should contain the claim string.")

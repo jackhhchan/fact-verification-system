@@ -16,7 +16,7 @@ class SentenceSelection(object):
 
     @property
     def spacy_all_tags(self):
-        return ('PERSON')       #TODO: there are more to be added
+        return ('PERSON', 'more')       #TODO: there are more to be added
 
     def filtered_sentences(self, input_claim, sentences:List[str]) -> List[tuple]:
         """ Returns list of filtered sentences with index
@@ -38,49 +38,54 @@ class SentenceSelection(object):
 
         # NOTE: conditions is extensible by adding more Condition subclasses. 
         conditions = [
-            OneTagMatch(doc_claim, doc_sent)
+            OneTagMatch(doc_claim, doc_sent),
+            SentenceMinNumTokens(None, doc_sent)
         ]
 
         for cond in conditions:
             if not isinstance(cond, Condition):
                 raise AttributeError("[SS] conditions in list must be an instances of class Condition.")
-            if cond.meet_condition(self._get_NER_tags) is False:
+            if cond.meet_condition() is False:
                 return False
         return True
 
 
-    def _get_NER_tags(self, doc:spacy.tokens.doc.Doc) -> set:
-        """ Uses spaCy's NER tagger to return NER tags
 
-        Return:
-            A set of NER tags.
-        
-        Arg:
-        sent -- sentence returned by ES
-        """
-        return set([e.label_ for e in doc.ents])
 
 
 
 class Condition(object):
-    def __init__(self, doc_1, doc_2):
-        self.doc_1 = doc_1
-        self.doc_2 = doc_2
+    def __init__(self, doc_1: spacy.tokens.doc.Doc, doc_2: spacy.tokens.doc.Doc):
+        self.doc_1 = doc_1      # input_claim
+        self.doc_2 = doc_2      # returned result from elastic search.
     
-    def meet_condition(self, *args) -> bool:
+    def meet_condition(self) -> bool:
         raise NotImplementedError("[SS] Must implement meet_condition().")
 
 class OneTagMatch(Condition):
-    def meet_condition(self, *args):
-        try:
-            _get_NER_tags = args[0]
-        except IndexError:
-            raise IndexError(
-                    "[SS] OneTagMatch condition must have _get_NER_tags() \
-                    method as first argument.")
+    def meet_condition(self):
         if not callable(_get_NER_tags):
             raise ValueError('[SS] _get_NER_tags must be a function.')
         doc_1_tags = _get_NER_tags(self.doc_1)
         doc_2_tags = _get_NER_tags(self.doc_2)
 
-        return len(doc_1_tags.intersection(doc_2_tags)) > 0
+        return len(doc_1_tags.intersection(doc_2_tags)) >= 1
+
+class SentenceMinNumTokens(Condition):
+    """ Match results satisfying minimum number of tokens that constitute a sentence. """
+    def meet_condition(self):
+        # tokenize docs, check length.
+        doc_filtered_punct = list(filter(lambda t: not t.is_punct, self.doc_2))
+        return len(doc_filtered_punct) >= 3
+
+
+def _get_NER_tags(doc:spacy.tokens.doc.Doc) -> set:
+    """ Uses spaCy's NER tagger to return NER tags
+
+    Return:
+        A set of NER tags.
+    
+    Arg:
+    sent -- sentence returned by ES
+    """
+    return set([e.label_ for e in doc.ents])
