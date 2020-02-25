@@ -69,7 +69,10 @@ class OneTagMatch(Condition):
         doc_1_tags = _get_NER_tags(self.doc_1)
         doc_2_tags = _get_NER_tags(self.doc_2)
 
-        return len(doc_1_tags.intersection(doc_2_tags)) >= 1
+        if len(doc_1_tags) == 0:
+            return True
+        else:
+            return len(doc_1_tags.intersection(doc_2_tags)) >= 1
 
 class SentenceMinNumTokens(Condition):
     """ Match results satisfying minimum number of tokens that constitute a sentence. """
