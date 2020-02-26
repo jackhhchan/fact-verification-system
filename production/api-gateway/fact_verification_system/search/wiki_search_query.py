@@ -102,6 +102,9 @@ class Results(object):
     def results(self):
         return self._results
 
+    def get_num_hits(self) -> int:
+        return self._results['hits']['total']['value']
+
     def get_hits(self, limit:int=None)->list:
         try:
             hits = self._results['hits']['hits']
@@ -126,6 +129,8 @@ class Results(object):
     def get_sentences(self, limit:int=None)->List[str]:
         hits = self.get_hits(limit)
         return list([hit['_source']['sentence'] for hit in hits])
+
+    
 
 
     def __str__(self):
