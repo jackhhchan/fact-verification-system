@@ -27,6 +27,7 @@ class DatabaseQuery(object):
                 page_id, 
                 sent_idx
             ))
+            # returns None on default
         except MultipleResultsFound:
             print("[DBQ] Multiple results found for page_id: {}, sent_idx: {}".format(
                 page_id, 

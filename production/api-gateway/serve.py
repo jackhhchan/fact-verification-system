@@ -42,10 +42,11 @@ class Evidence(Resource):
             ## send query to search engine
             print("Querying elasticsearch...")
             res = wsq.query(es, claim)
-            hits = res.get_hits(limit=limit)
+            if res.get_num_hits() <= 0:
+                return abort(404, "No results returned from search engine.")
+
             sentences = res.get_sentences(limit=limit)
-            pp(sentences)
-            
+
             ## sentence selection
             # filtered sentences
             filtered_sentences = ss.filtered_sentences(claim, sentences)
@@ -64,15 +65,25 @@ class Evidence(Resource):
 
             # make prediction
             print("Classifying filtered sentences...")
-            preds =  tfxp.post_predictions(classifier_inputs)
-            pp(preds)
-
-            preds_sentences = list(zip(filtered_sentences, preds.values()))
-            return formattedResponse(meta=None, data=preds_sentences)
+            data =  tfxp.post_predictions(classifier_inputs)
+            if data['status_code'] == 200:
+                preds_sentences = list(zip(filtered_sentences, data['predictions'].values()))
+                return formattedResponse(meta=None, data=preds_sentences)  
+            else:
+                abort(data['status_code'], data['reason'])
         else:
             message = ("Request must contain json. "
                  "'data' field should contain the claim string.")
             abort(400, message)
+
+# class NoResultsFound(Exception):
+#     code = 404
+#     description = "No results found."
+
+# @api.errorhandler(NoResultsFound)
+# def handle_noresultsfound_exception(error):
+#     return {'message': error.specific}
+
 
 # add CORS headers before sending response back
 @app.after_request
@@ -81,6 +92,8 @@ def add_cors(response):
     response.headers["Access-Control-Allow-Headers"] = "*"
     return response
 
+
+## Exceptions ##
 
 
 ## HELPERS ##
