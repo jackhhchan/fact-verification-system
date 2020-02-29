@@ -53,17 +53,10 @@ class TFXPredict(object):
 
         if json_res.status_code == 200:
             predictions = json_res.json()['predictions']
-            return {
-                'status_code': json_res.status_code,
-                'predictions': dict({i: self._get_label(pred[0]) for (i, pred) in enumerate(predictions)})
-            }
-                
+            return dict({i: self._get_label(pred[0]) for (i, pred) in enumerate(predictions)})
             # return list([self._get_label(pred[0]) for pred in predictions])
         else:
-            return {
-                'status_code': json_res.status_code,
-                'reason': json_res.reason
-            }
+            return json_res.json()
 
 
     def _check_model_status(self):

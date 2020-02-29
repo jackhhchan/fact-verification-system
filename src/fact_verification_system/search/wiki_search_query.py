@@ -30,7 +30,7 @@ class WikiSearchQuery(object):
         try:
             res = es.search(
                 index=cls.index,
-                body=cls._format_full_text_match(input_claim)
+                body=cls._format_full_text_multi_match(input_claim)
             )
         except NotFoundError as e:
             print("[WSQ] Index {} does not exist.".format(cls.index))
@@ -102,9 +102,6 @@ class Results(object):
     def results(self):
         return self._results
 
-    def get_num_hits(self) -> int:
-        return self._results['hits']['total']['value']
-
     def get_hits(self, limit:int=None)->list:
         try:
             hits = self._results['hits']['hits']
@@ -129,8 +126,6 @@ class Results(object):
     def get_sentences(self, limit:int=None)->List[str]:
         hits = self.get_hits(limit)
         return list([hit['_source']['sentence'] for hit in hits])
-
-    
 
 
     def __str__(self):

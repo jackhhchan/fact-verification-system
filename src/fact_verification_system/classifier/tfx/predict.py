@@ -6,13 +6,13 @@ NOTE: Docker container tensorflow/serving must be running.
 
 import json
 import requests
-from typing import Tuple, List, Dict
+from typing import Tuple, List
 
 from fact_verification_system.classifier.pipeline.bert.preprocess import get_embeddings
 
 # current model trained by vm.
 max_seq_length = 64         
-MODEL_NAME = "nli-bert"                 # set when running docker container.
+MODEL_NAME = "nli-bert-classifier"      # set when running docker container.
 VERSION = 1                             # set as export path when saving model. (load_and_save.py)
 
 class TFXPredict(object):
@@ -23,7 +23,7 @@ class TFXPredict(object):
         self.MODEL_NAME = MODEL_NAME    
         self.VERSION = str(VERSION)
 
-        self.port = 8080                        # cloud run default port
+        self.port = 8501
         self.max_seq_length = max_seq_length
         
         try:
@@ -34,10 +34,9 @@ class TFXPredict(object):
 
     @property
     def tfx_url(self):
-        # return "http://localhost:{}/v{}/models/{}".format(self.port, self.VERSION, self.MODEL_NAME)
-        return "https://tfx-ddzqcpwcwq-an.a.run.app/v{}/models/{}".format(self.VERSION, self.MODEL_NAME)
+        return "http://localhost:{}/v{}/models/{}".format(self.port, self.VERSION, self.MODEL_NAME)
      
-    def post_predictions(self, bert_sents_list:List[Tuple[str]]) -> Dict[int, str]:
+    def post_predictions(self, bert_sents_list:List[Tuple[str]]) -> List[str]:
         """ Returns a list of predicted labels. """
         instances = list()
         for bert_sents in bert_sents_list:
@@ -47,29 +46,16 @@ class TFXPredict(object):
         data = self._get_json_data(instances)
         headers = self._get_headers()
 
-        tfx_url_predict = self.tfx_url + ":predict"
+        json_res = requests.post(self.tfx_url, data=data, headers=headers)
 
-        json_res = requests.post(tfx_url_predict, data=data, headers=headers)
-
-        if json_res.status_code == 200:
-            predictions = json_res.json()['predictions']
-            return {
-                'status_code': json_res.status_code,
-                'predictions': dict({i: self._get_label(pred[0]) for (i, pred) in enumerate(predictions)})
-            }
-                
-            # return list([self._get_label(pred[0]) for pred in predictions])
-        else:
-            return {
-                'status_code': json_res.status_code,
-                'reason': json_res.reason
-            }
+        predictions = json.loads(json_res.text)['predictions']
+        return list([self._get_label(pred[0]) for pred in predictions])
 
 
     def _check_model_status(self):
 
         json_res = requests.get(self.tfx_url)
-        state = json.loads(json_res.text)["model_version_status"][0]["state"]
+        state = json.load(json_res)["model_version_status"][0]["state"]
         if not state == "AVAILABLE":
             raise ConnectionAbortedError(
         "[TFX] Model: {}, Version: {} is not available.".format(
