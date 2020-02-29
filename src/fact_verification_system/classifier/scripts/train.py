@@ -13,7 +13,7 @@ class Hyperparams(Enum):
     BATCH_SIZE = 8
     EPOCHS = 80
 #     OPTIMIZER = Adam(learning_rate=0.001)        # default 0.01
-    OPTIMIZER = SGD(learning_rate=0.0001)          # default 0.01
+    OPTIMIZER = SGD(learning_rate=0.001)          # default 0.01
     LOSS = 'binary_crossentropy'
     METRICS = ['accuracy']
     BUFFER_SIZE = 1024
@@ -33,14 +33,16 @@ class Model(Enum):
 def main():    
     # Parallel Extraction
     # suffix = "train_64_slightly_more_supports.tfrecord"      #NOTE: CHANGE THIS
-    suffix_train = "train_64_balanced.tfrecord"
+#     suffix_train = "train_64_balanced.tfrecord"
+    suffx_train = "train_64_balanced_10000_samples.tfrecord"
     # suffix = "train_raw_string.tfrecord"
     file_pattern = "../dataset/tfrecords/" + suffix_train
 
     ds = _extract(file_pattern)
 
     # suffix = "devset" + suffix[5:]      #NOTE: CHANGE THIS
-    suffix_dev = "devset_64_balanced.tfrecord"
+#     suffix_dev = "devset_64_balanced.tfrecord"
+    suffix_dev = "devset_64_balanced_10000_samples.tfrecord"
     # suffix = "devset_raw_string.tfrecord"
     file_pattern = "../dataset/tfrecords/" + suffix_dev
 
