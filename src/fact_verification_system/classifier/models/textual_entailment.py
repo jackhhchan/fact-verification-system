@@ -2,7 +2,7 @@ import tensorflow as tf
 import tensorflow_hub as hub
 from tensorflow.keras import Model
 from tensorflow.keras.layers import Dense
-from tensorflow.keras.layers import Bidirectional, LSTM
+from tensorflow.keras.layers import Bidirectional, LSTM, BatchNormalization, Dropout
 
 def create_bert_model(max_seq_length):
     """
@@ -23,9 +23,13 @@ def create_bert_model(max_seq_length):
                                             name="segment_ids")
 
     pool_embs, all_embs = bert_layer([input_word_ids, input_mask, segment_ids])
-    d_0 = Dense(units=512, activation='relu')(pool_embs)
-    d_1 = Dense(units=256, activation='relu')(d_0)
-    d_2 = Dense(units=1, activation='sigmoid', name='target')(d_1)
+    bn_0 = BatchNormalization()(pool_embs)
+    do_0 = Dropout(rate=0.5)(bn_0)
+    d_0 = Dense(units=128, activation='relu')(do_0)
+#     bn_1 = BatchNormalization()(d_0)
+#     do_1 = Dropout(rate=0.5)(bn_1)
+#     d_1 = Dense(units=256, activation='relu')(do_1)
+    d_2 = Dense(units=1, activation='sigmoid', name='target')(d_0)
 
     return Model(inputs=[input_word_ids, input_mask, segment_ids],
                 outputs=d_2)
