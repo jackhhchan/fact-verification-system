@@ -11,8 +11,9 @@ from fact_verification_system.classifier.pipeline.bert.preprocess import get_emb
 
 def main():
     # mock data
-    mock_claim = "robert downey junior is iron man."
-    mock_evidence = "robert downey junior is definitely not iron man, that's crazy!."
+    mock_claim = 'robert downey junior is iron man.'
+    mock_evidence = "robert downey junior is a plumber, accountant and a professional dancer"
+    # mock_evidence = "robert downey junior is definitely not iron man, that's crazy!."
     bert_sents = (mock_claim, mock_evidence)
     # print("bert_sents: {}".format(bert_sents))
     
@@ -30,8 +31,8 @@ def main():
     )
     headers = {"content-type": "application/json"}
 
-    # tf_serving_url = "http://localhost:8501/v1/models/nli-bert:predict"
-    tf_serving_url = "https://tfx-ddzqcpwcwq-an.a.run.app/v1/models/nli-bert:predict"
+    tf_serving_url = "http://localhost:8501/v1/models/nli-bert:predict"
+    # tf_serving_url = "https://tfx-ddzqcpwcwq-an.a.run.app/v1/models/nli-bert:predict"
     # print("Sending to {}...\ndata: {}".format(tf_serving_url, data))
     
     
