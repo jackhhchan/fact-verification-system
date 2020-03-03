@@ -22,7 +22,7 @@ def create_bert_model(max_seq_length):
     segment_ids = tf.keras.layers.Input(shape=(max_seq_length,), dtype=tf.int32,
                                             name="segment_ids")
 
-    pool_embs, all_embs = bert_layer([input_word_ids, input_mask, segment_ids])
+    pool_embs, _ = bert_layer([input_word_ids, input_mask, segment_ids])    #pool_embs, all_embs
     bn_0 = BatchNormalization()(pool_embs)
     do_0 = Dropout(rate=0.5)(bn_0)
     d_0 = Dense(units=128, activation='relu')(do_0)

@@ -17,7 +17,7 @@ def main():
     model = te.create_bert_model(max_seq_length)
 
     print("Loading weights...")
-    WEIGHTS_DIR = "../trained_models/tf-2-vm"
+    WEIGHTS_DIR = "../trained_models/desktop/10000samples"
     WEIGHTS_FNAME = "model_weights.hdf5"
     model.load_weights(os.path.join(WEIGHTS_DIR, WEIGHTS_FNAME))
 

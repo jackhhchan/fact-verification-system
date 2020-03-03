@@ -34,7 +34,7 @@ def main():
     # Parallel Extraction
     # suffix = "train_64_slightly_more_supports.tfrecord"      #NOTE: CHANGE THIS
 #     suffix_train = "train_64_balanced.tfrecord"
-    suffx_train = "train_64_balanced_10000_samples.tfrecord"
+    suffix_train = "train_64_balanced_10000_samples.tfrecord"
     # suffix = "train_raw_string.tfrecord"
     file_pattern = "../dataset/tfrecords/" + suffix_train
 
@@ -42,7 +42,7 @@ def main():
 
     # suffix = "devset" + suffix[5:]      #NOTE: CHANGE THIS
 #     suffix_dev = "devset_64_balanced.tfrecord"
-    suffix_dev = "devset_64_balanced_10000_samples.tfrecord"
+    suffix_dev = "devset_64_balanced_2000_samples.tfrecord"
     # suffix = "devset_raw_string.tfrecord"
     file_pattern = "../dataset/tfrecords/" + suffix_dev
 
