@@ -7,7 +7,7 @@ The system verify your claim following these 3 components:
   2. Sentence Selection (uses NER from SpaCy)
   3. Natural Language Inference (uses a fine-tuned BERT model trained on Tensorflow 2.0)
   
-Search returns relevant results from the Wikipedia dataset, then sentences are further filtered from having at least one shared Entity tag. These sentences are fed into a fine-tuned BERT classifier to output either a REFUTE or a SUPPORT label.
+Search returns relevant results from the Wikipedia dataset, then sentences are further filtered from having at least one shared Entity tag. These sentences are fed into a fine-tuned BERT classifier to output either a REFUTE or a SUPPORT label. Each component is managed using a microservices architecture with single client facing API Gateway.
 
 ### Key Technologies:
 Tensorflow 2.0, Elasticsearch 7.5.2, PostgreSQL 12, Docker, GCP App Engine, GCP Cloud Run, SpaCy.
