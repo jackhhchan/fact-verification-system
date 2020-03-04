@@ -2,10 +2,12 @@
 
 The Fact Verification System verify claims using from a subset of information from Wikipedia.
 
-The system consist of 3 components:
-  - Search (uses BM25 algorithm from Elasticsearch)
-  - Sentence Selection (uses NER from SpaCy)
-  - Natural Language Inference (uses a fine-tuned BERT model trained on Tensorflow 2.0)
+The system verify your claim following these 3 components:
+  1. Search (uses BM25 algorithm from Elasticsearch)
+  2. Sentence Selection (uses NER from SpaCy)
+  3. Natural Language Inference (uses a fine-tuned BERT model trained on Tensorflow 2.0)
+  
+Search returns relevant results from the Wikipedia dataset, then sentences are further filtered from having at least one shared Entity tag. These sentences are fed into a fine-tuned BERT classifier to output either a REFUTE or a SUPPORT label.
 
 ### To run:
 To run any module or scripts:
