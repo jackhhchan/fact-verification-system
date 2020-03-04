@@ -19,13 +19,17 @@ cd src/
 python -m folder.module
 ```
 
-## src/postgres
-#### database storing raw dataset files
-#### 
+## src/fact_verification_system/search
+connects to Elasticsearch and contains encapsulated queries to return relevant search results.
 
+## src/fact_verification_system/sentence_selection
+uses NER from SpaCy to analyse texts, further filtering them before having them classified.
 
 ## src/fact_verification_system/classifier
-#### classifier to be run on its own container.
+classifier to be run on its own container.
 
-## src/fact_verification_system/search
-#### search engine to retrieve relevant data.
+## src/postgres
+database storing raw dataset files. Mostly used to construct the dataset for training the natural language inference classifier.
+
+## src/logger
+logs any exceptions into a text file. Has async capabilities.
