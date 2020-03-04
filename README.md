@@ -9,6 +9,9 @@ The system verify your claim following these 3 components:
   
 Search returns relevant results from the Wikipedia dataset, then sentences are further filtered from having at least one shared Entity tag. These sentences are fed into a fine-tuned BERT classifier to output either a REFUTE or a SUPPORT label.
 
+### Key Technologies:
+Tensorflow 2.0, Elasticsearch 7.5.2, PostgreSQL 12, Docker, GCP App Engine, GCP Cloud Run, SpaCy.
+
 ### To run:
 To run any module or scripts:
 ```
