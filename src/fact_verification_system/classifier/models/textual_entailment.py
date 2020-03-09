@@ -25,10 +25,10 @@ def create_bert_model(max_seq_length):
     pool_embs, _ = bert_layer([input_word_ids, input_mask, segment_ids])    #pool_embs, all_embs
     # bn_0 = BatchNormalization()(pool_embs)
     # do_0 = Dropout(rate=0.5)(bn_0)
-    d_0 = Dense(units=512, activation='relu')(pool_embs)
+    d_0 = Dense(units=512, activation='relu', name='dense_0')(pool_embs)
 #     bn_1 = BatchNormalization()(d_0)
 #     do_1 = Dropout(rate=0.5)(bn_1)
-    d_1 = Dense(units=256, activation='relu')(d_0)
+    d_1 = Dense(units=256, activation='relu', name='dense_1')(d_0)
     d_2 = Dense(units=1, activation='sigmoid', name='target')(d_1)
 
     return Model(inputs=[input_word_ids, input_mask, segment_ids],
