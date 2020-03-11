@@ -1,0 +1,129 @@
+#!/usr/bin/env python
+# coding: utf-8
+
+# # BERT Fine-tuned
+
+# In[1]:
+
+
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from transformers import BertModel, BertConfig
+
+
+# In[2]:
+
+
+model = BertModel(BertConfig(max_length=64))
+# model.config
+
+
+# ### Extending BERT in Pytorch
+# https://huggingface.co/transformers/_modules/transformers/modeling_bert.html#BertModel
+
+# In[3]:
+
+
+class BERTNli(BertModel):
+    """ Fine-Tuned BERT model for natural language inference."""
+    
+    def __init__(self, config):
+        super().__init__(config)
+        self.fc1 = nn.Linear(768, 512)
+        self.fc2 = nn.Linear(512, 256)
+        self.fc3 = nn.Linear(256, 1)
+        
+    
+    def forward(self,
+               input_ids=None,
+               token_type_ids=None):
+        x = super(BERTNli, self).forward(input_ids=input_ids, token_type_ids=token_type_ids)
+        (_, pooled) = x    # see huggingface's doc.
+        x = F.relu(self.fc1(pooled))
+        x = F.relu(self.fc2(x))
+        x = F.sigmoid(self.fc3(x))
+        return x
+# Specify BERT config
+# Load pre-trained model weights.
+model = BERTNli(BertConfig(max_length=64)).from_pretrained('bert-base-uncased')  # BertConfig returns 12 layers on default.
+
+# In[7]:
+
+
+# Tensorboard init
+from torch.utils.tensorboard import SummaryWriter
+from datetime import datetime
+
+# timestamp = datetime.now().strftime("%d.%m.%Y-%H.%M.%S")
+# log_dir = 'runs/{}'.format(timestamp)
+log_dir = 'runs/test_0'
+writer = SummaryWriter(log_dir)
+
+
+# In[8]:
+
+
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import DataLoader
+# from tqdm.notebook import tqdm
+from tqdm import tqdm
+
+from transforms import bert_transforms
+from wiki_datasets import WikiDataset
+
+
+EPOCHS = 10
+BATCH_SIZE = 8
+RECORD_INTERVAL = 2000 # steps
+
+transformed_dataset = WikiDataset(ds_csv="src/pytorch_tutorial/fvs/train_balanced_10000_samples.csv",
+                                transform=bert_transforms)
+
+for data in tqdm(transformed_dataset):
+    data
+
+
+trainLoader = DataLoader(transformed_dataset,
+                        batch_size=BATCH_SIZE, shuffle=True, 
+                        num_workers=1, 
+                        collate_fn=transformed_dataset.transform_collate_fn)
+
+optimizer = optim.SGD(model.parameters(), lr=0.001)
+criterion = nn.BCELoss()
+
+# CUDA
+device = torch.device('cuda:{}'.format(torch.cuda.current_device()))
+model.to(device)
+
+running_loss = 0.0
+for epoch in tqdm(range(EPOCHS), desc='epoch'):
+    for i, data in tqdm(enumerate(trainLoader, 0), desc='step'):
+        input_ids = data['input_ids'].long().to(device)
+        segments = data['segments'].long().to(device)
+        targets = data['targets'].float().to(device)
+        
+        optimizer.zero_grad()
+                
+        outputs = model(input_ids=input_ids, token_type_ids=segments)
+        loss = criterion(outputs, targets)
+        loss.backward()  # calculate and store gradients in model
+        optimizer.step()
+        
+        running_loss += loss.item()
+        
+        if i % (RECORD_INTERVAL-1) == 0:
+            writer.add_scalar('training_loss',
+                              running_loss/RECORD_INTERVAL)
+            running_loss = 0.0
+            
+print("Training complete.")
+
+
+# In[ ]:
+
+
+
+
