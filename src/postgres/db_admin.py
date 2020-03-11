@@ -73,7 +73,7 @@ class DatabaseAdmin(object):
             
 
     @contextmanager
-    def session(self):
+    def session(self, verbose=True):
         """ Binds session to engine """
         # check if engine & session exist.
         assert (self._engine is not None and self._sessionmaker is not None), \
@@ -83,9 +83,11 @@ class DatabaseAdmin(object):
         try:
             yield session
             # after with block completes:
-            print("[DBA] session commiting...")
+            if verbose:
+                print("[DBA] session commiting...")
             session.commit()    
-            print("[DBA] session commited.")
+            if verbose:
+                print("[DBA] session commited.")
         except:
             session.rollback()
             raise Exception("[DBA] Session scope failed. Session is rolled back.")

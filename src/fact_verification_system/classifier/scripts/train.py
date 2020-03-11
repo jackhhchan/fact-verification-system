@@ -23,7 +23,7 @@ class CallbackParams(Enum):
     MONITOR = 'val_loss'            # or 'loss' for training accuracy
     PATIENCE = 2
     # tensorboard
-    HISTOGRAM_FREQ = 0
+    HISTOGRAM_FREQ = 1              # default: 0  -- freq (in epochs) at which to compute activation and weight histograms
     UPDATE_FREQ = 'epoch'           # default: epoch   -- either batch or epoch or integer (100 = per 100 batches)
 
 class Model(Enum):
@@ -78,11 +78,6 @@ def main():
                 metrics=Hyperparams.METRICS.value)
     model.summary()
 
-    # print(model.run_eagerly)
-    # print(model.layers)
-    # # print(model.variables)
-    # exit()
-
     
     # Training
     history_dir = "models_history/"
@@ -104,7 +99,8 @@ def main():
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, 
                                                         histogram_freq=CallbackParams.HISTOGRAM_FREQ.value,
                                                         update_freq=CallbackParams.UPDATE_FREQ.value)
-    earlystopping_callback = tf.keras.callbacks.EarlyStopping(monitor=CallbackParams.MONITOR.value, patience=CallbackParams.PATIENCE.value)
+    earlystopping_callback = tf.keras.callbacks.EarlyStopping(monitor=CallbackParams.MONITOR.value, 
+                                                              patience=CallbackParams.PATIENCE.value)
     model_checkpoint_callback = tf.keras.callbacks.ModelCheckpoint(filepath=log_dir+'/model_weights.hdf5',
                                                                 save_best_only=True,
                                                                 save_weights_only=True)
@@ -115,13 +111,7 @@ def main():
             callbacks=[tensorboard_callback, earlystopping_callback, model_checkpoint_callback],
             validation_data=ds_val,
             verbose=1)
-
-    # file_dir = log_dir + "/weights/"
-    # if not os.path.isdir(file_dir):
-    #     os.makedirs(file_dir)
-    # filepath = file_dir + "bert_model_weights.h5"
-    # model.save_weights(filepath=filepath)
-
+            
     config_dir = log_dir + "/config/"
     if not os.path.isdir(config_dir):
         os.makedirs(config_dir)
@@ -133,8 +123,10 @@ def main():
         # Pass the file handle in as a lambda function to make it callable
         model.summary(print_fn=lambda x: fh.write(x + '\n'))
 
-    with open(log_dir + '/datasets.txt', 'w') as fh:
-        fh.write("Datasets used:\n{}\n{}".format(suffix_train, suffix_dev))
+    with open(log_dir + '/other_info.txt', 'w') as fh:
+        fh.write("Datasets used:\n{}\n{}\n".format(suffix_train, suffix_dev))
+        fh.write("Optimizer: {}".format(str(Hyperparams.OPTIMIZER.value)))
+
 
     print("Model history saved to {}.".format(log_dir))
 
@@ -164,7 +156,7 @@ def _parse_and_transform(serialized)-> dict:
     # transform
     target = example.pop('target')
     target = tf.reshape(target, ())
-#     target = tf.cast(target, tf.float32)
+    # target = tf.cast(target, tf.float32)
     
     embeddings_dict = example
     for k, v in embeddings_dict.items():
@@ -173,6 +165,7 @@ def _parse_and_transform(serialized)-> dict:
     target_dict = {'target': target}
 
     return (embeddings_dict, target_dict)
+
 
 def _parse_and_transform_str(serialized)-> dict:
     feature_description = {

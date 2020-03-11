@@ -177,7 +177,7 @@ def clean_data(train_json:dict) -> pd.DataFrame:
     df_SUPPORTS = df_SUPPORTS.sample(n=num_supports, random_state=44)
     
     df_balanced = pd.concat([df_SUPPORTS, df_REFUTES])
-    print("Cleaned dataset iobservations for each label:\n{}\n".format(
+    print("Cleaned dataset observations for each label:\n{}\n".format(
                                     df_balanced['label'].value_counts()
                                     ))
 

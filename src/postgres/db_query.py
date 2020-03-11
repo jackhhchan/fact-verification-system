@@ -15,7 +15,7 @@ class DatabaseQuery(object):
         return session.query()
 
     @staticmethod
-    def query_sentence(session: Session, page_id:str, sent_idx:int) -> str:
+    def query_sentence(session: Session, page_id:str, sent_idx:int, verbose=True) -> str:
         """ Returns a single sentence for the specific page_id and sent_idx. """
         try:
             ev =  session.query(Wiki).\
@@ -23,20 +23,23 @@ class DatabaseQuery(object):
                 filter(Wiki.sent_idx==sent_idx).one()
             return ev.sentence
         except NoResultFound:
-            print("[DBQ] No results found for page_id: {}, sent_idx: {}".format(
-                page_id, 
-                sent_idx
-            ))
+            if verbose:
+                print("[DBQ] No results found for page_id: {}, sent_idx: {}".format(
+                    page_id, 
+                    sent_idx
+             ))
         except MultipleResultsFound:
-            print("[DBQ] Multiple results found for page_id: {}, sent_idx: {}".format(
-                page_id, 
-                sent_idx
-            ))
+            if verbose:
+                print("[DBQ] Multiple results found for page_id: {}, sent_idx: {}".format(
+                    page_id, 
+                    sent_idx
+                ))
         except Exception as e:
-            print("[DBQ] Query error: {}".format(e))
+            if verbose:
+                print("[DBQ] Query error: {}".format(e))
 
     @staticmethod
-    async def async_query_sentence(session: Session, page_id:str, sent_idx:int) -> str:
+    async def async_query_sentence(session: Session, page_id:str, sent_idx:int, verbose=True) -> str:
         """ Returns a single sentence for the specific page_id and sent_idx. """
         try:
             ev =  session.query(Wiki).\
@@ -44,14 +47,17 @@ class DatabaseQuery(object):
                 filter(Wiki.sent_idx==sent_idx).one()
             return ev.sentence
         except NoResultFound:
-            print("[DBQ] No results found for page_id: {}, sent_idx: {}".format(
-                page_id, 
-                sent_idx
-            ))
+            if verbose:
+                print("[DBQ] No results found for page_id: {}, sent_idx: {}".format(
+                    page_id, 
+                    sent_idx
+             ))
         except MultipleResultsFound:
-            print("[DBQ] Multiple results found for page_id: {}, sent_idx: {}".format(
-                page_id, 
-                sent_idx
-            ))
+            if verbose:
+                print("[DBQ] Multiple results found for page_id: {}, sent_idx: {}".format(
+                    page_id, 
+                    sent_idx
+                ))
         except Exception as e:
-            print("[DBQ] Query error: {}".format(e))
+            if verbose:
+                print("[DBQ] Query error: {}".format(e))
