@@ -17,7 +17,8 @@ def main():
     model = te.create_bert_model(max_seq_length)
 
     print("Loading weights...")
-    WEIGHTS_DIR = "../trained_models/desktop/10000samples"
+    # WEIGHTS_DIR = "../trained_models/tf-2-vm/"
+    WEIGHTS_DIR = "../trained_models/desktop/10000samples_2_dense"
     WEIGHTS_FNAME = "model_weights.hdf5"
     model.load_weights(os.path.join(WEIGHTS_DIR, WEIGHTS_FNAME))
 
@@ -26,6 +27,9 @@ def main():
     MODEL_DIR = "ModelSavedFormat"
     VERSION = 1
     export_path = os.path.join(WEIGHTS_DIR, MODEL_DIR, str(VERSION))
+
+    if not input("Saving to {}. Confirm? (y/n): ".format(export_path)) == 'y': 
+        exit("Terminated.")
 
     tf.keras.models.save_model(
         model,
