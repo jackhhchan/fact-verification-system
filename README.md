@@ -26,7 +26,7 @@ connects to Elasticsearch and contains encapsulated queries to return relevant s
 uses NER from SpaCy to analyse texts, further filtering them before having them classified.
 
 ## src/fact_verification_system/classifier
-classifier to be run on its own container.
+NLI classifier data cleaning (e.g. downsampling), training and inference scripts.
 
 ## src/postgres
 database storing raw dataset files. Mostly used to construct the dataset for training the natural language inference classifier.
