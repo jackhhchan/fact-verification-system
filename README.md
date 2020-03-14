@@ -1,6 +1,6 @@
 # Fact Verification System
 
-The Fact Verification System verify claims using from a subset of information from Wikipedia.
+The Fact Verification System verify claims using a subset of text data mined from Wikipedia.
 
 The system verify your claim following these 3 components:
   1. Search (uses BM25 algorithm from Elasticsearch)
