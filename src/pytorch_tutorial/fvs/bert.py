@@ -29,7 +29,7 @@ class BERTNli(BertModel):
         (_, pooled) = x    # see huggingface's doc.
         x = F.relu(self.fc1(pooled))
         x = F.relu(self.fc2(x))
-        x = F.sigmoid(self.fc3(x))
+        x = torch.sigmoid(self.fc3(x))
         return x
 
 # Specify BERT config
@@ -48,7 +48,6 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
-# from tqdm.notebook import tqdm
 from tqdm import tqdm
 
 from transforms import bert_transforms
@@ -70,9 +69,9 @@ trainLoader = DataLoader(transformed_dataset,
 
 
 optimizers = {
-    'train_sgd': optim.SGD(model.parameters(), lr=0.001)),
-    'train_adam': optim.Adam(model.parameters(), lr=0.001)),
-    'train_sgd_momentum': optim.SGD(model.parameters(), lr=0.001, momentum=0.9))
+    'train_sgd': optim.SGD(model.parameters(), lr=0.001),
+    'train_adam': optim.Adam(model.parameters(), lr=0.001),
+    'train_sgd_momentum': optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 }
 
 
@@ -86,7 +85,7 @@ optimizer = optimizers.get(optim_name)
 criterion = nn.BCELoss()
 
 # Tensorboard
-log_dir = 'src/pytorch_tutorial/fvs/runs/{}'.format(optimizer_name)
+log_dir = 'src/pytorch_tutorial/fvs/runs/{}'.format(optim_name)
 writer = SummaryWriter(log_dir)
 
 running_loss = 0.0
@@ -102,6 +101,8 @@ for epoch in tqdm(range(EPOCHS), desc='epoch'):
         optimizer.zero_grad()
                 
         outputs = model(input_ids=input_ids, token_type_ids=segments)
+        targets = targets.view(-1, 1)   # match output shape
+
         loss = criterion(outputs, targets)
         loss.backward()  # calculate and store gradients in model
         optimizer.step()
@@ -113,6 +114,8 @@ for epoch in tqdm(range(EPOCHS), desc='epoch'):
             writer.add_scalar('training_loss',
                             running_loss/running_steps,
                             interval_count)
+            
+
             running_loss = 0.0
             running_steps = 0.0
             interval_count += 1
