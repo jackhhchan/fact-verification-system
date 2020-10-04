@@ -18,7 +18,7 @@ The components that are these 3 steps can simply be known as the Search Engine, 
 
 **Architecture:**
 
-![image-20201004182358914](/home/jack/.config/Typora/typora-user-images/image-20201004182358914.png)
+![image-20201004182358914](diagram.png)
 
 <u>Key Technologies Used:</u>
 
