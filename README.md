@@ -2,7 +2,7 @@
 
 This is a mini project inspired by the Natural Language Processing subject in Unimelb. It follows a funnel approach where sentences relevant to the input claim are returned then filtered and finally classified for whether it supports or refutes your claim. 
 
-You may access the the demo [here](http://www.fact-verification-system.appspot.com/).
+You may access the the demo [here](https://www.fact-verification-system.appspot.com/).
 
 The code repo for the react front end may be accessed [here](https://github.com/jackhhchan/fact-verification-system-react) if you're interested.
 
