@@ -7,9 +7,10 @@ from typing import List
 from logger.logger import Logger, Modes
 from fact_verification_system.search.wiki_search_admin import WikiSearchAdmin
 
+
 def seed():
     index_name = 'wiki'
-    
+
     config = 'fact_verification_system/search/config.yaml'
     es = WikiSearchAdmin(config).es
 
@@ -18,7 +19,7 @@ def seed():
 Enter y/n: "
 
     confirm_prompt = input(prompt_str)
-    
+
     if confirm_prompt != 'y':
         exit("Exited.")
 
@@ -27,10 +28,10 @@ Enter y/n: "
     if es.indices.exists(index=index_name):
         es.indices.delete(index=index_name)
     es.indices.create(index=index_name)
-    
+
     print("Seeding newly created index: {}...".format(index_name))
     cpu_count = multiprocessing.cpu_count()
-    
+
     # deque(parallel_bulk(
     # client=wsa.es,
     # actions=_iter_wiki_data_for_es(index_name),
@@ -38,9 +39,9 @@ Enter y/n: "
     # ), maxlen=0)
 
     pb = parallel_bulk(
-    client=es,
-    actions=_iter_wiki_data_for_es(index_name),
-    thread_count=cpu_count
+        client=es,
+        actions=_iter_wiki_data_for_es(index_name),
+        thread_count=cpu_count
     )
 
     for success, info in pb:
@@ -52,19 +53,19 @@ Enter y/n: "
     print("Bulk insert complete.")
 
 
-
 def _iter_wiki_data_for_es(index_name):
     """ Checked and formatted wiki data to be inserted into ES"""
     for parsed in _iter_wiki_data():
         if _check(parsed):
             yield {
-            "_index":index_name,
-            'page_id': parsed[0],
-            'sent_idx': int(parsed[1]),
-            'sentence': parsed[2],
-        }
+                "_index": index_name,
+                'page_id': parsed[0],
+                'sent_idx': int(parsed[1]),
+                'sentence': parsed[2],
+            }
 
-def _check(parsed:List[str]) -> bool:
+
+def _check(parsed: List[str]) -> bool:
     """ [Async] Final type cast check before inserting data to DB. """
     try:
         str(parsed[0])
@@ -93,7 +94,7 @@ def _iter_wiki_data():
                 yield _parse_txt(line)
 
 
-def _parse_txt(line:str) -> list:
+def _parse_txt(line: str) -> list:
     """ Parses each line in all the wiki pages texts. 
     
     Args:
