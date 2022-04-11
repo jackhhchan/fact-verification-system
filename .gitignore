@@ -1,3 +1,6 @@
 .idea/
 dataset/wiki-pages-text
 **/*.sqlite
+**/runs/
+**/__pycache__/
+**/*.swp

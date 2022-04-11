@@ -89,3 +89,4 @@ class WikiDataset(Dataset):
 
 if __name__ == "__main__":
     ds = WikiDataset()
+    print(ds)
