@@ -152,20 +152,6 @@ class BERTNli(nn.Module):
         return batch_token_embeddings[:, 0, :]
 
 
-
-
-def config_train(model):
-    optims = [
-        optim.SGD(lr=0.001, params=model.parameters()),
-        optim.SGD(lr=0.01, params=model.parameters()),
-        optim.SGD(lr=0.01, momentum=0.9, params=model.parameters()),
-        optim.SGD(lr=0.001, momentum=0.9, params=model.parameters()),
-        optim.Adam(lr=0.01, params=model.parameters()),
-        optim.Adam(lr=0.001, params=model.parameters()),
-        optim.AdamW(lr=2e-5, eps=1e-6, params=model.parameters()),
-    ]
-
-
 def config_optimisers():
     return [
         (optim.SGD, {'lr': 0.01}),

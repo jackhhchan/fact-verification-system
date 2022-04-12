@@ -130,8 +130,8 @@ if __name__ == '__main__':
                     total_loss.append(loss.item())
 
                     # feedback info purposes
-                    if (i + 1) % 100 == 0:
-                        print(f"[{epoch + 1}, batch {i + 1}] loss: {running_loss2 / 100:.4f}")
+                    if (i + 1) % 20 == 0:
+                        print(f"[{epoch + 1}, batch {i + 1}] loss: {running_loss2 / 20:.6f}")
                         running_loss2 = 0
 
                     # evaluation + recording
