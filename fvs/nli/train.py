@@ -1,4 +1,4 @@
-from fvs.nli.bert import BERTNli, config_train, config_model, config_optimisers
+from fvs.nli.bert import BERTNli, config_model, config_optimisers
 import torch
 import torch.nn as nn
 from transformers import BertModel, BertTokenizer, BertConfig
@@ -46,8 +46,8 @@ if __name__ == '__main__':
     df_raw['evidence_sentence'] = df_raw['evidence_sentence'].apply(clean)
 
     BATCH_SIZE = 8
-    TO_SAMPLE = 1000
-    NUM_BATCHES_BEFORE_EVAL = 800 / BATCH_SIZE  # essentially per epoch
+    TO_SAMPLE = 10_000
+    # NUM_BATCHES_BEFORE_EVAL = 800 / BATCH_SIZE  # essentially per epoch
     # make balanced
     supports = df_raw[df_raw['label'].str.contains("SUPPORT") == True].sample(int(TO_SAMPLE / 2))
     refutes = df_raw[df_raw['label'].str.contains("REFUTE") == True].sample(int(TO_SAMPLE / 2))
@@ -87,7 +87,7 @@ if __name__ == '__main__':
 
     model_configs = config_model()
 
-    EPOCH = 10000
+    EPOCH = 500
     for config in model_configs:
         for opt_fn, opt_params in config_optimisers():
             bnli = BERTNli(config=config)
@@ -135,28 +135,18 @@ if __name__ == '__main__':
                         running_loss2 = 0
 
                     # evaluation + recording
-                    if (i + 1) % NUM_BATCHES_BEFORE_EVAL == 0:
-                        train_acc = evaluate(d_loader=loader, model=bnli)
-                        test_acc = evaluate(d_loader=test_loader, model=bnli)
+                train_acc = evaluate(d_loader=loader, model=bnli)
+                test_acc = evaluate(d_loader=test_loader, model=bnli)
 
-                        tags = {
-                            "loss": running_loss / NUM_BATCHES_BEFORE_EVAL,
-                            "train_acc": train_acc,
-                            "test_acc": test_acc
-                        }
-                        writer.add_scalars("Loss & Acc", tags, (epoch + 1) * i)
-                        print(f"[{epoch + 1}, {i + 1}] loss: {running_loss / NUM_BATCHES_BEFORE_EVAL} \
-                                train_acc: {train_acc} test_acc: {test_acc}")
-
-                        # writer.add_scalar("Test Accuracy", test_acc, (epoch + 1) * i)
-                        # params = list(bnli.parameters())
-                        # writer.add_scalar("Loss", running_loss / modulo, (epoch + 1) * i)
-                        # writer.add_histogram("Linear0_weights", params[-4], (epoch + 1) * i)
-                        # writer.add_histogram("Linear0_grad", params[-4].grad.view(-1), (epoch + 1) * i)
-                        # writer.add_histogram("Linear1_weights", params[-2], (epoch + 1) * i)
-                        # writer.add_histogram("Linear1_grad", params[-2].grad.view(-1), (epoch + 1) * i)
-
-                        running_loss = 0
+                tags = {
+                    "loss": running_loss / i,
+                    "train_acc": train_acc,
+                    "test_acc": test_acc
+                }
+                writer.add_scalars("Loss & Acc", tags, (epoch + 1) * i)
+                print(f"[{epoch + 1}, {i + 1}] loss: {running_loss / i} \
+                        train_acc: {train_acc} test_acc: {test_acc}")
+                running_loss = 0
 
             metrics = {'avg_loss': np.mean(total_loss),
                        'max_loss': np.max(total_loss),
@@ -167,5 +157,12 @@ if __name__ == '__main__':
             torch.save(bnli.state_dict(), path)
             print(f"Model saved to {path}")
             elapsed = datetime.now() - start
-            print(f"Time elapsed: {elapsed.second}s")
+            print(f"Time elapsed: {elapsed.seconds}s")
 
+# writer.add_scalar("Test Accuracy", test_acc, (epoch + 1) * i)
+# params = list(bnli.parameters())
+# writer.add_scalar("Loss", running_loss / modulo, (epoch + 1) * i)
+# writer.add_histogram("Linear0_weights", params[-4], (epoch + 1) * i)
+# writer.add_histogram("Linear0_grad", params[-4].grad.view(-1), (epoch + 1) * i)
+# writer.add_histogram("Linear1_weights", params[-2], (epoch + 1) * i)
+# writer.add_histogram("Linear1_grad", params[-2].grad.view(-1), (epoch + 1) * i)

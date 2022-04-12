@@ -57,8 +57,8 @@ class BERTNli(nn.Module):
             self.relu2 = nn.LeakyReLU()
             self.fc3 = nn.Linear(256, 1)
             # self.sigmoid = nn.Sigmoid()
+            self.fc_nsp = nn.Linear(768, 1)     # NSP
 
-        # self.fc_nsp = nn.Linear(768, 1)     # NSP
         if not self.config.nsp:
             self.fc_cat = nn.Linear(2 * 768, 1)  # Concatenated form
 
@@ -89,8 +89,8 @@ class BERTNli(nn.Module):
         x = self.bert_outputs(claims, evidence).to(device)
         # x.requires_grad = True
         if self.config.nsp:
-            # x = self.fc_nsp(x)
-            x = self.fc3(self.relu2(self.fc2(x)))
+            x = self.fc_nsp(x)
+            # x = self.fc3(self.relu2(self.fc2(x)))
         else:
             x = self.fc_cat(x)
         return x
@@ -157,9 +157,9 @@ def config_optimisers():
         (optim.SGD, {'lr': 0.01}),
         # (optim.SGD, {'lr': 0.001}),
         # (optim.SGD, {'lr': 0.01, 'momentum': 0.9}),
-        (optim.SGD, {'lr': 0.001, 'momentum': 0.9}),
+        # (optim.SGD, {'lr': 0.001, 'momentum': 0.9}),
         # (optim.Adam, {'lr': 0.01}),
-        (optim.Adam, {'lr': 0.001}),
+        # (optim.Adam, {'lr': 0.001}),
     ]
 
 
