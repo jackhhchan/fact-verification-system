@@ -163,7 +163,7 @@ if __name__ == '__main__':
                        'min_loss': np.min(total_loss)}
             writer.add_hparams(hparams, metrics, run_name=run)
             print("Training complete.")
-            path: str = f"./saved/{run}.pt"
+            path: str = f"./{run}.pt"
             torch.save(bnli.state_dict(), path)
             print(f"Model saved to {path}")
             elapsed = datetime.now() - start
