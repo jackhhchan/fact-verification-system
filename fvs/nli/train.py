@@ -108,7 +108,7 @@ if __name__ == '__main__':
             run: str = f"{str(datetime.now())}"
             writer = SummaryWriter(log_dir=f"runs/{run}")
 
-            print(f"Training started [{run}]:\n{config}\nEpoch={EPOCH}\n{optimiser}")
+            print(f"Training started [{run}]:\n{config}\nEpoch={EPOCH} Samples={TO_SAMPLE}\n{optimiser}")
             total_loss = list()
             start = datetime.now()
             for epoch in range(EPOCH):
