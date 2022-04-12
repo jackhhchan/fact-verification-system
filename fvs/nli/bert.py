@@ -6,6 +6,7 @@ import pandas as pd
 from torch.utils.data import DataLoader, Dataset
 import torch.optim as optim
 from typing import Tuple
+import re
 
 tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
 device = torch.device('cuda:{}'.format(torch.cuda.current_device()))
@@ -35,8 +36,16 @@ class BERTNli(nn.Module):
         self.config = config
         self.bert = BertModel(BertConfig.from_pretrained('bert-base-uncased', output_hidden_states=True))
         self.tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
-        for param in self.bert.parameters():
-            param.requires_grad = False
+
+        freeze_layer_prefix_pattern = re.compile(r"^(encoder\.layer\.[0-5]\.|embeddings\.)")
+
+        # keep last 2 layers not frozen
+        for name, param in self.bert.named_parameters():
+            param.requires_grad = True
+            if freeze_layer_prefix_pattern.match(name) is not None:
+                param.requires_grad = False
+            # print(f"{name} -> requires_grad={param.requires_grad}")
+
         # self.bn1 = nn.BatchNorm1d(1536)
         # self.fc1 = nn.Linear(1536, 768)
         # self.bn2 = nn.BatchNorm1d(768)
@@ -143,6 +152,8 @@ class BERTNli(nn.Module):
         return batch_token_embeddings[:, 0, :]
 
 
+
+
 def config_train(model):
     optims = [
         optim.SGD(lr=0.001, params=model.parameters()),
@@ -170,7 +181,7 @@ def config_model():
     return [
         # BertNliConfig(nsp=True, num_embedding_layers=0, pool_method='avg'),  # 0 = last hidden layer only
         # BertNliConfig(nsp=True, num_embedding_layers=4, pool_method='avg'),
-        BertNliConfig(nsp=True, num_embedding_layers=0, pool_method='cls'),        # use cls
+        BertNliConfig(nsp=True, num_embedding_layers=0, pool_method='cls'),  # use cls
         # BertNliConfig(nsp=True, num_embedding_layers=0, pool_method='pooler_output'),        # use pool
         # BertNliConfig(nsp=True, num_embedding_layers=4, pool_method=''),        # use cls
         # BertNliConfig(nsp=False, num_embedding_layers=0, pool_method='avg'),
@@ -199,3 +210,7 @@ if __name__ == '__main__':
     # print(tokenised_inputs, tokenised_types)
     # print(tokenizer.convert_ids_to_tokens(tokenised_inputs))
 
+    config = BertNliConfig(nsp=True, num_embedding_layers=0, pool_method='cls')  # use cls
+    nli = BERTNli(config)
+    print("Params: ", len(nli.params))
+    print()

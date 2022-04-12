@@ -23,21 +23,40 @@ def clean(s: str):
     return re.sub(' +', ' ', pattern.sub('', s).encode("ascii", "ignore").decode())
 
 
+def evaluate(d_loader, model: BERTNli):
+    with torch.no_grad():
+        model.eval()
+        wrong = 0.0
+        total = 0
+        for data in d_loader:
+            claim, evi, label = data
+            y_pred = model(claims=claim, evidence=evi)
+            y_pred = torch.sigmoid(y_pred)
+            # print(y_pred, label)
+            wrong += torch.sum(torch.abs(torch.round(y_pred).detach().cpu().view(-1) - label.detach().cpu().view(-1)))
+            total += len(y_pred)
+        acc = 1.0 - float(wrong / total)
+        model.train()
+    return acc
+
+
 if __name__ == '__main__':
     df_raw = pd.read_csv("./train.csv")
     df_raw['claim'] = df_raw['claim'].apply(clean)
     df_raw['evidence_sentence'] = df_raw['evidence_sentence'].apply(clean)
 
     # make balanced
-    to_sample = 10
-    supports = df_raw[df_raw['label'].str.contains("SUPPORT") == True].sample(to_sample)
-    refutes = df_raw[df_raw['label'].str.contains("REFUTE") == True].sample(to_sample)
+    TO_SAMPLE = 100
+    supports = df_raw[df_raw['label'].str.contains("SUPPORT") == True].sample(TO_SAMPLE)
+    refutes = df_raw[df_raw['label'].str.contains("REFUTE") == True].sample(TO_SAMPLE)
     df = pd.concat([supports, refutes])
 
     # split train test
     train, test = train_test_split(df, test_size=0.2)
     # train = supports
     # test = supports.copy()
+    # train = df
+    # test = df.sample(20)
 
 
     ## Data Loaders ##
@@ -66,7 +85,7 @@ if __name__ == '__main__':
     model_configs = config_model()
 
     EPOCH = 10000
-    modulo = 1
+    modulo = 10
     for config in model_configs:
         for opt_fn, opt_params in config_optimisers():
             bnli = BERTNli(config=config)
@@ -104,31 +123,26 @@ if __name__ == '__main__':
                     total_loss.append(loss.item())
 
                     if (i + 1) % modulo == 0:
-                        # TODO: evaluation
-                        with torch.no_grad():
-                            bnli.eval()
-                            wrong = 0.0
-                            total = 0
-                            for data in test_loader:
-                                claim, evi, label = data
-                                y_pred = bnli(claims=claim, evidence=evi)
-                                y_pred = torch.sigmoid(y_pred)
-                                print(y_pred, label)
-                                wrong += torch.sum(torch.abs(
-                                    torch.round(y_pred).detach().cpu().view(-1) - label.detach().cpu().view(-1)))
-                                total += len(y_pred)
-                                # print(f"Number of wrongs: {wrong} over {len(y_pred)}")
-                            test_acc = 1.0 - float(wrong / total)
-                            writer.add_scalar("Test Accuracy", test_acc, (epoch + 1) * i)
-                            bnli.train()
+                        train_acc = evaluate(d_loader=loader, model=bnli)
+                        test_acc = evaluate(d_loader=test_loader, model=bnli)
 
-                        params = list(bnli.parameters())
-                        print(f"[{epoch + 1}, {i + 1}] loss: {running_loss / modulo} test_acc: {test_acc}")
-                        writer.add_scalar("Loss", running_loss / modulo, (epoch + 1) * i)
+                        tags = {
+                            "loss": running_loss/modulo,
+                            "train_acc": train_acc,
+                            "test_acc": test_acc
+                        }
+                        writer.add_scalars("Loss & Acc", tags, (epoch+1)*i)
+                        print(f"[{epoch + 1}, {i + 1}] loss: {running_loss / modulo} \
+                                train_acc: {train_acc} test_acc: {test_acc}")
+
+                        # writer.add_scalar("Test Accuracy", test_acc, (epoch + 1) * i)
+                        # params = list(bnli.parameters())
+                        # writer.add_scalar("Loss", running_loss / modulo, (epoch + 1) * i)
                         # writer.add_histogram("Linear0_weights", params[-4], (epoch + 1) * i)
                         # writer.add_histogram("Linear0_grad", params[-4].grad.view(-1), (epoch + 1) * i)
-                        writer.add_histogram("Linear1_weights", params[-2], (epoch + 1) * i)
-                        writer.add_histogram("Linear1_grad", params[-2].grad.view(-1), (epoch + 1) * i)
+                        # writer.add_histogram("Linear1_weights", params[-2], (epoch + 1) * i)
+                        # writer.add_histogram("Linear1_grad", params[-2].grad.view(-1), (epoch + 1) * i)
+
                         running_loss = 0
 
             metrics = {'avg_loss': np.mean(total_loss),
