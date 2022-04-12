@@ -110,6 +110,7 @@ if __name__ == '__main__':
 
             print(f"Training started [{run}]:\n{config}\nEpoch={EPOCH}\n{optimiser}")
             total_loss = list()
+            start = datetime.now()
             for epoch in range(EPOCH):
                 running_loss = 0.0
                 running_loss2 = 0.0
@@ -162,3 +163,9 @@ if __name__ == '__main__':
                        'min_loss': np.min(total_loss)}
             writer.add_hparams(hparams, metrics, run_name=run)
             print("Training complete.")
+            path: str = f"./saved/{run}.pt"
+            torch.save(bnli.state_dict(), path)
+            print(f"Model saved to {path}")
+            elapsed = datetime.now() - start
+            print(f"Time elapsed: {elapsed.second}s")
+
