@@ -45,19 +45,22 @@ if __name__ == '__main__':
     df_raw['claim'] = df_raw['claim'].apply(clean)
     df_raw['evidence_sentence'] = df_raw['evidence_sentence'].apply(clean)
 
+    BATCH_SIZE = 8
+    TO_SAMPLE = 1000
+    NUM_BATCHES_BEFORE_EVAL = 800 / BATCH_SIZE  # essentially per epoch
     # make balanced
-    TO_SAMPLE = 100
-    supports = df_raw[df_raw['label'].str.contains("SUPPORT") == True].sample(TO_SAMPLE)
-    refutes = df_raw[df_raw['label'].str.contains("REFUTE") == True].sample(TO_SAMPLE)
+    supports = df_raw[df_raw['label'].str.contains("SUPPORT") == True].sample(int(TO_SAMPLE / 2))
+    refutes = df_raw[df_raw['label'].str.contains("REFUTE") == True].sample(int(TO_SAMPLE / 2))
     df = pd.concat([supports, refutes])
 
     # split train test
     train, test = train_test_split(df, test_size=0.2)
+
+
     # train = supports
     # test = supports.copy()
     # train = df
     # test = df.sample(20)
-
 
     ## Data Loaders ##
     class Train(Dataset):
@@ -75,8 +78,8 @@ if __name__ == '__main__':
             return claim, evidence, label
 
 
-    loader = DataLoader(Train(train), batch_size=8, shuffle=True)
-    test_loader = DataLoader(Train(test), batch_size=8)
+    loader = DataLoader(Train(train), batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
+    test_loader = DataLoader(Train(test), batch_size=BATCH_SIZE, num_workers=4)
 
     ## CRITERION ##
     # criterion = nn.BCELoss()
@@ -85,7 +88,6 @@ if __name__ == '__main__':
     model_configs = config_model()
 
     EPOCH = 10000
-    modulo = 10
     for config in model_configs:
         for opt_fn, opt_params in config_optimisers():
             bnli = BERTNli(config=config)
@@ -98,7 +100,9 @@ if __name__ == '__main__':
                 'model_config': str(config),
                 'optim': str(optimiser),
                 'batch_size': loader.batch_size,
-                'epochs': EPOCH
+                'epochs': EPOCH,
+                'trainset_size': len(train),
+                'testset_size': len(test),
             }
 
             run: str = f"{str(datetime.now())}"
@@ -108,6 +112,7 @@ if __name__ == '__main__':
             total_loss = list()
             for epoch in range(EPOCH):
                 running_loss = 0.0
+                running_loss2 = 0.0
                 for i, data in enumerate(loader):
                     claim, evi, label = data
                     output = bnli(claims=claim, evidence=evi)
@@ -120,19 +125,26 @@ if __name__ == '__main__':
                     optimiser.step()  # apply grads
 
                     running_loss += loss.item()
+                    running_loss2 += loss.item()
                     total_loss.append(loss.item())
 
-                    if (i + 1) % modulo == 0:
+                    # feedback info purposes
+                    if (i + 1) % 100 == 0:
+                        print(f"[{epoch + 1}, batch {i + 1}] loss: {running_loss2 / 100:.4f}")
+                        running_loss2 = 0
+
+                    # evaluation + recording
+                    if (i + 1) % NUM_BATCHES_BEFORE_EVAL == 0:
                         train_acc = evaluate(d_loader=loader, model=bnli)
                         test_acc = evaluate(d_loader=test_loader, model=bnli)
 
                         tags = {
-                            "loss": running_loss/modulo,
+                            "loss": running_loss / NUM_BATCHES_BEFORE_EVAL,
                             "train_acc": train_acc,
                             "test_acc": test_acc
                         }
-                        writer.add_scalars("Loss & Acc", tags, (epoch+1)*i)
-                        print(f"[{epoch + 1}, {i + 1}] loss: {running_loss / modulo} \
+                        writer.add_scalars("Loss & Acc", tags, (epoch + 1) * i)
+                        print(f"[{epoch + 1}, {i + 1}] loss: {running_loss / NUM_BATCHES_BEFORE_EVAL} \
                                 train_acc: {train_acc} test_acc: {test_acc}")
 
                         # writer.add_scalar("Test Accuracy", test_acc, (epoch + 1) * i)
