@@ -88,6 +88,7 @@ if __name__ == '__main__':
     model_configs = config_model()
 
     EPOCH = 500
+    best_test_acc = 0
     for config in model_configs:
         for opt_fn, opt_params in config_optimisers():
             bnli = BERTNli(config=config)
@@ -138,6 +139,12 @@ if __name__ == '__main__':
                 train_acc = evaluate(d_loader=loader, model=bnli)
                 test_acc = evaluate(d_loader=test_loader, model=bnli)
 
+                if test_acc > best_test_acc:
+                    path: str = f"{run}_{test_acc:.2f}.pt"
+                    torch.save(bnli.state_dict(), path)
+                    print(f"New best model saved to {path}")
+                    best_test_acc = test_acc
+
                 tags = {
                     "loss": running_loss / i,
                     "train_acc": train_acc,
@@ -147,6 +154,8 @@ if __name__ == '__main__':
                 print(f"[{epoch + 1}, {i + 1}] loss: {running_loss / i} \
                         train_acc: {train_acc} test_acc: {test_acc}")
                 running_loss = 0
+                elapsed = datetime.now() - start
+                print(f"Time elapsed: {elapsed.seconds}s")
 
             metrics = {'avg_loss': np.mean(total_loss),
                        'max_loss': np.max(total_loss),
