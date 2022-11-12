@@ -4,3 +4,4 @@ dataset/wiki-pages-text
 **/runs/
 **/__pycache__/
 **/*.swp
+.venv/
